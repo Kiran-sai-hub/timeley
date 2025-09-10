@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, TrendingUp, Calendar, Award } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Clock, TrendingUp, Calendar, Award, BarChart3 } from 'lucide-react';
 import { TimeEntry, getStoredEntries, saveEntry, calculateDailyHours, calculateMonthlyHours, calculateYearlyHours, getLastEntry } from '@/lib/timeTracking';
 import { TimeLogTable } from './TimeLogTable';
+import { CalendarView } from './CalendarView';
 import { useToast } from '@/hooks/use-toast';
 
 export const TimeTracker = () => {
@@ -63,6 +65,21 @@ export const TimeTracker = () => {
             {currentTime.toLocaleTimeString()}
           </p>
         </div>
+
+        {/* Main Content with Tabs */}
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Calendar
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6 mt-6">
 
         {/* Status Card */}
         <Card className="bg-gradient-card shadow-card border-0">
@@ -140,18 +157,24 @@ export const TimeTracker = () => {
           </Card>
         </div>
 
-        {/* Time Log Table */}
-        <Card className="bg-gradient-card shadow-card border-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Time Log
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TimeLogTable entries={entries} />
-          </CardContent>
-        </Card>
+            {/* Time Log Table */}
+            <Card className="bg-gradient-card shadow-card border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  Time Log
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TimeLogTable entries={entries} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="calendar" className="mt-6">
+            <CalendarView entries={entries} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -132,3 +132,123 @@ export const getLastEntry = (entries: TimeEntry[]): TimeEntry | null => {
     entry.timestamp > latest.timestamp ? entry : latest
   );
 };
+
+// Calendar-specific types and functions
+export interface WorkingDay {
+  date: Date;
+  status: 'working' | 'partial' | 'absent' | 'weekend';
+  totalHours: number;
+  entries: TimeEntry[];
+  hasIncompleteShift: boolean;
+}
+
+export interface WeeklyStats {
+  totalDaysWorked: number;
+  totalHours: number;
+  incompleteDays: number;
+  expectedWorkingDays: number;
+}
+
+export type WorkDayStatus = 'working' | 'partial' | 'absent' | 'weekend';
+
+export const isWeekend = (date: Date): boolean => {
+  const day = date.getDay();
+  return day === 0 || day === 6; // Sunday or Saturday
+};
+
+export const getWorkDayStatus = (date: Date, entries: TimeEntry[]): WorkDayStatus => {
+  if (isWeekend(date)) return 'weekend';
+  
+  const dayEntries = entries.filter(entry => {
+    const entryDate = new Date(entry.timestamp);
+    return entryDate.toDateString() === date.toDateString();
+  });
+  
+  if (dayEntries.length === 0) return 'absent';
+  
+  const hasIn = dayEntries.some(entry => entry.action === 'IN');
+  const hasOut = dayEntries.some(entry => entry.action === 'OUT');
+  
+  if (hasIn && hasOut) {
+    const totalHours = calculateDailyHours(entries, date);
+    return totalHours >= 4 ? 'working' : 'partial';
+  }
+  
+  return 'partial';
+};
+
+export const getWorkingDaysInMonth = (year: number, month: number, entries: TimeEntry[]): WorkingDay[] => {
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0);
+  const workingDays: WorkingDay[] = [];
+  
+  for (let date = new Date(monthStart); date <= monthEnd; date.setDate(date.getDate() + 1)) {
+    const currentDate = new Date(date);
+    const dayEntries = entries.filter(entry => {
+      const entryDate = new Date(entry.timestamp);
+      return entryDate.toDateString() === currentDate.toDateString();
+    });
+    
+    const status = getWorkDayStatus(currentDate, entries);
+    const totalHours = calculateDailyHours(entries, currentDate);
+    const hasIncompleteShift = dayEntries.length > 0 && 
+      (dayEntries.length % 2 !== 0 || !dayEntries.some(e => e.action === 'OUT'));
+    
+    workingDays.push({
+      date: currentDate,
+      status,
+      totalHours,
+      entries: dayEntries,
+      hasIncompleteShift
+    });
+  }
+  
+  return workingDays;
+};
+
+export const getWeeklyStats = (startDate: Date, entries: TimeEntry[]): WeeklyStats => {
+  const weekDays: Date[] = [];
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(startDate);
+    day.setDate(startDate.getDate() + i);
+    weekDays.push(day);
+  }
+  
+  let totalDaysWorked = 0;
+  let totalHours = 0;
+  let incompleteDays = 0;
+  let expectedWorkingDays = 0;
+  
+  weekDays.forEach(day => {
+    if (!isWeekend(day)) {
+      expectedWorkingDays++;
+      const status = getWorkDayStatus(day, entries);
+      const dayHours = calculateDailyHours(entries, day);
+      
+      if (status === 'working') {
+        totalDaysWorked++;
+        totalHours += dayHours;
+      } else if (status === 'partial') {
+        totalDaysWorked += 0.5;
+        totalHours += dayHours;
+        incompleteDays++;
+      }
+    }
+  });
+  
+  return {
+    totalDaysWorked,
+    totalHours,
+    incompleteDays,
+    expectedWorkingDays
+  };
+};
+
+export const getWeekStart = (date: Date): Date => {
+  const week = new Date(date);
+  const day = week.getDay();
+  const diff = week.getDate() - day; // Sunday as start of week
+  week.setDate(diff);
+  week.setHours(0, 0, 0, 0);
+  return week;
+};
