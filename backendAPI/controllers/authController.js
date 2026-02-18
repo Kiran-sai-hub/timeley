@@ -45,7 +45,14 @@ const register = async (req, res, next) => {
             });
         }
 
-        const user = await User.create({ name, email, password, role, department });
+        // Auto-assign the department's manager to new employees
+        let managerId = null;
+        if (role === 'employee' && department) {
+            const deptManager = await User.findOne({ role: 'manager', department, isActive: true });
+            if (deptManager) managerId = deptManager._id;
+        }
+
+        const user = await User.create({ name, email, password, role, department, managerId });
         const token = signToken(user);
 
         res.status(201).json({
