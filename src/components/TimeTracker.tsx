@@ -55,7 +55,7 @@ export const TimeTracker = () => {
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-3">
-            <img src={timelyLogo} alt="Timely logo" className="w-12 h-12 md:w-14 md:h-14 object-contain" />
+            <img src={timelyLogo} alt="Timely logo" className="w-16 h-16 md:w-20 md:h-20 object-contain" />
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">Timely</h1>
           </div>
           <p className="text-muted-foreground text-lg">
