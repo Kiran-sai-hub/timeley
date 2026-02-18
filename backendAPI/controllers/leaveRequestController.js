@@ -199,13 +199,24 @@ const reviewLeave = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/leave-requests/team  (Manager only) ───────
+// ─────── GET /api/leave-requests/team  (Manager / Admin) ───────
 const getTeamLeaves = async (req, res, next) => {
     try {
-        const managerId = req.user._id;
+        const { role, department, _id: currentUserId } = req.user;
 
-        // Find all employees who report to this manager
-        const teamMembers = await User.find({ managerId }).select('_id name email department');
+        let teamMembers;
+
+        if (role === 'admin') {
+            // Admin sees ALL users (except themselves)
+            teamMembers = await User.find({ _id: { $ne: currentUserId } }).select('_id name email department role');
+        } else {
+            // Manager sees employees in their department (excluding themselves)
+            teamMembers = await User.find({
+                department,
+                _id: { $ne: currentUserId },
+            }).select('_id name email department role');
+        }
+
         const teamIds = teamMembers.map((m) => m._id);
 
         const filter = { userId: { $in: teamIds } };
@@ -214,7 +225,7 @@ const getTeamLeaves = async (req, res, next) => {
         }
 
         const leaves = await LeaveRequest.find(filter)
-            .populate('userId', 'name email department')
+            .populate('userId', 'name email department role')
             .sort({ appliedAt: -1 });
 
         res.json({ success: true, data: { teamMembers, leaves } });
