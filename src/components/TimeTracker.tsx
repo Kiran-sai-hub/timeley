@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, TrendingUp, Calendar, Award, BarChart3 } from 'lucide-react';
+import { Clock, TrendingUp, Calendar, Award, BarChart3, Umbrella } from 'lucide-react';
 import { TimeEntry, getStoredEntries, saveEntry, calculateDailyHours, calculateMonthlyHours, calculateYearlyHours, getLastEntry } from '@/lib/timeTracking';
 import { TimeLogTable } from './TimeLogTable';
 import { CalendarView } from './CalendarView';
+import { LeaveManagement } from './LeaveManagement';
 import { useToast } from '@/hooks/use-toast';
 
 export const TimeTracker = () => {
@@ -68,7 +69,7 @@ export const TimeTracker = () => {
 
         {/* Main Content with Tabs */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+          <TabsList className="grid w-full grid-cols-3 max-w-lg mx-auto">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Dashboard
@@ -76,6 +77,10 @@ export const TimeTracker = () => {
             <TabsTrigger value="calendar" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Calendar
+            </TabsTrigger>
+            <TabsTrigger value="leave" className="flex items-center gap-2">
+              <Umbrella className="w-4 h-4" />
+              Leave
             </TabsTrigger>
           </TabsList>
 
@@ -173,6 +178,10 @@ export const TimeTracker = () => {
 
           <TabsContent value="calendar" className="mt-6">
             <CalendarView entries={entries} />
+          </TabsContent>
+
+          <TabsContent value="leave" className="mt-6">
+            <LeaveManagement />
           </TabsContent>
         </Tabs>
       </div>

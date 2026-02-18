@@ -252,3 +252,149 @@ export const getWeekStart = (date: Date): Date => {
   week.setHours(0, 0, 0, 0);
   return week;
 };
+
+// ============= Leave Management =============
+
+export type LeaveType = 'Annual Leave' | 'Sick Leave' | 'Casual Leave' | 'Holiday';
+export type LeaveStatus = 'pending' | 'approved' | 'rejected';
+
+export interface LeaveRequest {
+  id: string;
+  startDate: string;   // ISO date string
+  endDate: string;
+  leaveType: LeaveType;
+  reason: string;
+  status: LeaveStatus;
+  appliedAt: string;   // ISO date string
+  reviewedAt?: string;
+  reviewNote?: string;
+}
+
+const LEAVE_STORAGE_KEY = 'timeTracking_leaves';
+
+export const getStoredLeaveRequests = (): LeaveRequest[] => {
+  try {
+    const stored = localStorage.getItem(LEAVE_STORAGE_KEY);
+    if (!stored) return [];
+    return JSON.parse(stored);
+  } catch {
+    return [];
+  }
+};
+
+export const saveLeaveRequest = (req: LeaveRequest): void => {
+  const leaves = getStoredLeaveRequests();
+  const idx = leaves.findIndex(l => l.id === req.id);
+  if (idx >= 0) {
+    leaves[idx] = req;
+  } else {
+    leaves.push(req);
+  }
+  localStorage.setItem(LEAVE_STORAGE_KEY, JSON.stringify(leaves));
+};
+
+export const updateLeaveStatus = (
+  id: string,
+  status: LeaveStatus,
+  note?: string
+): void => {
+  const leaves = getStoredLeaveRequests();
+  const idx = leaves.findIndex(l => l.id === id);
+  if (idx >= 0) {
+    leaves[idx].status = status;
+    leaves[idx].reviewedAt = new Date().toISOString();
+    if (note) leaves[idx].reviewNote = note;
+    localStorage.setItem(LEAVE_STORAGE_KEY, JSON.stringify(leaves));
+  }
+};
+
+export const getLeaveRequestsForMonth = (year: number, month: number): LeaveRequest[] => {
+  const leaves = getStoredLeaveRequests();
+  return leaves.filter(leave => {
+    const start = new Date(leave.startDate);
+    const end = new Date(leave.endDate);
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0);
+    return start <= monthEnd && end >= monthStart;
+  });
+};
+
+export const getLeaveDatesForMonth = (year: number, month: number): Map<string, LeaveStatus> => {
+  const leaves = getLeaveRequestsForMonth(year, month);
+  const dateMap = new Map<string, LeaveStatus>();
+  
+  leaves.forEach(leave => {
+    const start = new Date(leave.startDate);
+    const end = new Date(leave.endDate);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const key = new Date(d).toDateString();
+      // approved overrides pending
+      if (!dateMap.has(key) || leave.status === 'approved') {
+        dateMap.set(key, leave.status);
+      }
+    }
+  });
+  return dateMap;
+};
+
+export const calculateLeaveHours = (leaves: LeaveRequest[]): Record<LeaveType, number> => {
+  const result: Record<LeaveType, number> = {
+    'Annual Leave': 0,
+    'Sick Leave': 0,
+    'Casual Leave': 0,
+    'Holiday': 0,
+  };
+  leaves
+    .filter(l => l.status === 'approved')
+    .forEach(leave => {
+      const start = new Date(leave.startDate);
+      const end = new Date(leave.endDate);
+      const days = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      result[leave.leaveType] += days * 8; // 8h per day
+    });
+  return result;
+};
+
+export interface HoursBreakdownData {
+  regularHours: number;
+  overtime: number;
+  leaveHours: Record<LeaveType, number>;
+  totalWorked: number;
+}
+
+export const getHoursBreakdown = (
+  entries: TimeEntry[],
+  leaves: LeaveRequest[],
+  year: number,
+  month: number
+): HoursBreakdownData => {
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0);
+
+  let regularHours = 0;
+  let overtime = 0;
+  const REGULAR_HOURS_PER_DAY = 8;
+
+  for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
+    if (isWeekend(d)) continue;
+    const dayHours = calculateDailyHours(entries, new Date(d));
+    if (dayHours > 0) {
+      const reg = Math.min(dayHours, REGULAR_HOURS_PER_DAY);
+      const ot = Math.max(0, dayHours - REGULAR_HOURS_PER_DAY);
+      regularHours += reg;
+      overtime += ot;
+    }
+  }
+
+  const leaveHours = calculateLeaveHours(leaves.filter(l => {
+    const start = new Date(l.startDate);
+    return start.getFullYear() === year && start.getMonth() === month;
+  }));
+
+  return {
+    regularHours,
+    overtime,
+    leaveHours,
+    totalWorked: regularHours + overtime,
+  };
+};
