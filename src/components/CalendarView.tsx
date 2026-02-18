@@ -2,52 +2,106 @@ import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  ChevronLeft,
+  ChevronRight,
   Calendar as CalendarIcon,
   Clock,
   TrendingUp,
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react';
-import { 
-  TimeEntry, 
+import {
+  TimeEntry,
   LeaveRequest,
   LeaveStatus,
-  getWorkingDaysInMonth, 
+  WorkingDay,
   getWeeklyStats,
   getWeekStart,
   formatHours,
-  WorkingDay,
-  getStoredLeaveRequests,
-  getLeaveDatesForMonth,
 } from '@/lib/timeTracking';
+import { timeEntriesApi, leaveRequestsApi } from '@/lib/api';
 import { HoursBreakdown } from './HoursBreakdown';
 import { DayDetailPanel } from './DayDetailPanel';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
   entries: TimeEntry[];
+  leaves: LeaveRequest[];
+  onRefresh?: () => void;
 }
 
-export const CalendarView = ({ entries }: CalendarViewProps) => {
+// Helper to convert API working day to local format
+const toLocalWorkingDay = (wd: { date: string; status: string; totalHours: number; entries: any[]; hasIncompleteShift: boolean }): WorkingDay => ({
+  date: new Date(wd.date),
+  status: wd.status as WorkingDay['status'],
+  totalHours: wd.totalHours,
+  entries: wd.entries.map((e: any) => ({
+    id: e._id,
+    timestamp: new Date(e.timestamp),
+    action: e.action as 'IN' | 'OUT',
+  })),
+  hasIncompleteShift: wd.hasIncompleteShift,
+});
+
+export const CalendarView = ({ entries, leaves, onRefresh }: CalendarViewProps) => {
   const [viewMonth, setViewMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
+  const [workingDays, setWorkingDays] = useState<WorkingDay[]>([]);
+  const [weeklyStats, setWeeklyStats] = useState<{ totalDaysWorked: number; totalHours: number; incompleteDays: number; expectedWorkingDays: number }>({
+    totalDaysWorked: 0,
+    totalHours: 0,
+    incompleteDays: 0,
+    expectedWorkingDays: 0,
+  });
+  const [leaveDateMap, setLeaveDateMap] = useState<Map<string, LeaveStatus>>(new Map());
+  const [isLoading, setIsLoading] = useState(false);
 
   const currentYear = viewMonth.getFullYear();
   const currentMonth = viewMonth.getMonth();
-  
-  const workingDays = getWorkingDaysInMonth(currentYear, currentMonth, entries);
-  const weekStart = getWeekStart(new Date());
-  const weeklyStats = getWeeklyStats(weekStart, entries);
 
+  // Memoize weekStart as a string to avoid infinite re-render loops
+  // (getWeekStart returns a new Date object each time → breaks useEffect deps)
+  const weekStartStr = (() => {
+    const ws = getWeekStart(new Date());
+    return ws.toISOString().split('T')[0];
+  })();
+
+  // Fetch working days and stats from API
   useEffect(() => {
-    setLeaves(getStoredLeaveRequests());
-  }, [currentYear, currentMonth]);
+    const fetchCalendarData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch working days for the month
+        const wdRes = await timeEntriesApi.getWorkingDays(currentYear, currentMonth);
+        if (wdRes.success) {
+          setWorkingDays(wdRes.data.map(toLocalWorkingDay));
+        }
 
-  const leaveDateMap = getLeaveDatesForMonth(currentYear, currentMonth);
+        // Fetch weekly stats
+        const wsRes = await timeEntriesApi.getWeeklyStats(weekStartStr);
+        if (wsRes.success) {
+          setWeeklyStats(wsRes.data);
+        }
+
+        // Fetch leaves for the month
+        const leaveRes = await leaveRequestsApi.getLeavesForMonth(currentYear, currentMonth);
+        if (leaveRes.success) {
+          const map = new Map<string, LeaveStatus>();
+          Object.entries(leaveRes.data.dateMap).forEach(([date, status]) => {
+            map.set(date, status as LeaveStatus);
+          });
+          setLeaveDateMap(map);
+        }
+      } catch (error) {
+        console.error('Failed to fetch calendar data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCalendarData();
+  }, [currentYear, currentMonth, weekStartStr, entries]);
 
   const getDateStatus = (date: Date): WorkingDay | undefined => {
     return workingDays.find(wd => wd.date.toDateString() === date.toDateString());
@@ -60,16 +114,16 @@ export const CalendarView = ({ entries }: CalendarViewProps) => {
   const getDayClassName = (date: Date) => {
     const leaveStatus = getLeaveStatus(date);
     if (leaveStatus === 'approved') return cn('relative', 'bg-primary/20 text-primary-foreground hover:bg-primary/30');
-    if (leaveStatus === 'pending')  return cn('relative', 'bg-warning/30 text-warning-foreground hover:bg-warning/40');
+    if (leaveStatus === 'pending') return cn('relative', 'bg-warning/30 text-warning-foreground hover:bg-warning/40');
 
     const dayInfo = getDateStatus(date);
     if (!dayInfo) return '';
     const base = 'relative';
     switch (dayInfo.status) {
       case 'working': return cn(base, 'bg-success/20 text-success-foreground hover:bg-success/30');
-      case 'partial':  return cn(base, 'bg-warning/20 text-warning-foreground hover:bg-warning/30');
-      case 'weekend':  return cn(base, 'text-muted-foreground');
-      case 'absent':   return cn(base, 'text-muted-foreground hover:bg-muted/30');
+      case 'partial': return cn(base, 'bg-warning/20 text-warning-foreground hover:bg-warning/30');
+      case 'weekend': return cn(base, 'text-muted-foreground');
+      case 'absent': return cn(base, 'text-muted-foreground hover:bg-muted/30');
       default: return base;
     }
   };
@@ -124,6 +178,14 @@ export const CalendarView = ({ entries }: CalendarViewProps) => {
     const e = new Date(l.endDate);
     return selectedDate >= s && selectedDate <= e;
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Clock className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

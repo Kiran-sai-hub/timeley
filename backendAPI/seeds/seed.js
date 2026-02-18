@@ -35,6 +35,14 @@ const seed = async () => {
         department: 'Engineering',
     });
 
+    const admin = await User.create({
+        name: 'Admin User',
+        email: 'admin@timely.com',
+        password: 'password123',
+        role: 'admin',
+        department: 'Administration',
+    });
+
     const alice = await User.create({
         name: 'Alice Johnson',
         email: 'alice@timely.com',
@@ -53,7 +61,7 @@ const seed = async () => {
         managerId: manager._id,
     });
 
-    console.log('  ✅ Users created');
+    console.log('  ✅ Users created (including admin)');
 
     // ── Time Entries (past 5 working days for Alice) ──
     const entries = [];
@@ -114,9 +122,10 @@ const seed = async () => {
     console.log('  ✅ Leave requests created');
     console.log('\n🎉 Seeding complete!');
     console.log('\n📋 Test accounts:');
-    console.log('   Manager:  manager@timely.com  /  password123');
-    console.log('   Employee: alice@timely.com     /  password123');
-    console.log('   Employee: bob@timely.com       /  password123');
+    console.log('   Admin:    admin@timely.com     /  password123');
+    console.log('   Manager:  manager@timely.com   /  password123');
+    console.log('   Employee: alice@timely.com      /  password123');
+    console.log('   Employee: bob@timely.com        /  password123');
 
     await mongoose.disconnect();
     process.exit(0);
