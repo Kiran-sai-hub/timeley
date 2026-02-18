@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, TrendingUp, Calendar, Award, BarChart3, Umbrella } from 'lucide-react';
+import timelyLogo from '@/assets/timely.png';
 import { TimeEntry, getStoredEntries, saveEntry, calculateDailyHours, calculateMonthlyHours, calculateYearlyHours, getLastEntry } from '@/lib/timeTracking';
 import { TimeLogTable } from './TimeLogTable';
 import { CalendarView } from './CalendarView';
@@ -53,7 +54,10 @@ export const TimeTracker = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Timely</h1>
+          <div className="flex items-center justify-center gap-3">
+            <img src={timelyLogo} alt="Timely logo" className="w-12 h-12 md:w-14 md:h-14 object-contain" />
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Timely</h1>
+          </div>
           <p className="text-muted-foreground text-lg">
             {currentTime.toLocaleDateString('en-US', { 
               weekday: 'long', 
