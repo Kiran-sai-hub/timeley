@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -19,7 +18,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, CheckCircle2, XCircle, Clock, Umbrella, ShieldCheck } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, XCircle, Clock, Umbrella } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   LeaveRequest,
@@ -27,9 +26,16 @@ import {
   LeaveStatus,
   getStoredLeaveRequests,
   saveLeaveRequest,
-  updateLeaveStatus,
 } from '@/lib/timeTracking';
 import { useToast } from '@/hooks/use-toast';
+
+// Future-proofing: role prop will be injected from auth context later
+// Usage: const { user } = useAuth(); <LeaveManagement role={user.role} />
+// Manager-specific UI (Approve/Reject buttons, review note textarea, updateLeaveStatus)
+// will be re-added conditioned on role === 'manager' when backend auth is wired up.
+interface LeaveManagementProps {
+  role?: 'employee' | 'manager'; // Will come from auth context later
+}
 
 const LEAVE_TYPES: LeaveType[] = ['Annual Leave', 'Sick Leave', 'Casual Leave', 'Holiday'];
 
@@ -45,11 +51,9 @@ const statusIcons: Record<LeaveStatus, React.ReactNode> = {
   rejected: <XCircle className="w-3 h-3" />,
 };
 
-export const LeaveManagement = () => {
-  const [isManager, setIsManager] = useState(false);
+export const LeaveManagement = ({ role = 'employee' }: LeaveManagementProps) => {
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [filterStatus, setFilterStatus] = useState<LeaveStatus | 'all'>('all');
-  const [reviewNote, setReviewNote] = useState<Record<string, string>>({});
 
   // Form state
   const [startDate, setStartDate] = useState<Date>();
@@ -96,137 +100,112 @@ export const LeaveManagement = () => {
     toast({ title: 'Leave request submitted!', description: `${leaveType} from ${format(startDate, 'MMM d')} to ${format(endDate, 'MMM d')}` });
   };
 
-  const handleAction = (id: string, status: LeaveStatus) => {
-    updateLeaveStatus(id, status, reviewNote[id]);
-    refresh();
-    toast({
-      title: status === 'approved' ? 'Leave Approved' : 'Leave Rejected',
-    });
-  };
-
   const displayed = leaves.filter(l => filterStatus === 'all' || l.status === filterStatus);
-  const myLeaves = displayed; // In a real app would filter by userId
 
   return (
     <div className="space-y-6">
-      {/* Manager Toggle */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-primary" />
-          <span className="font-medium text-foreground">Manager View</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{isManager ? 'Manager' : 'Employee'}</span>
-          <Switch checked={isManager} onCheckedChange={setIsManager} />
-        </div>
-      </div>
-
-      {/* Employee: Apply for Leave */}
-      {!isManager && (
-        <Card className="bg-gradient-card shadow-card border-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Umbrella className="w-4 h-4 text-primary" />
-              Apply for Leave
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Start Date */}
-                <div className="space-y-1.5">
-                  <Label>Start Date</Label>
-                  <Popover open={startOpen} onOpenChange={setStartOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, 'PPP') : 'Pick a date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={(d) => { setStartDate(d); setStartOpen(false); }}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* End Date */}
-                <div className="space-y-1.5">
-                  <Label>End Date</Label>
-                  <Popover open={endOpen} onOpenChange={setEndOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn('w-full justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, 'PPP') : 'Pick a date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={(d) => { setEndDate(d); setEndOpen(false); }}
-                        disabled={(d) => startDate ? d < startDate : false}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-
-              {/* Leave Type */}
+      {/* Apply for Leave */}
+      <Card className="bg-gradient-card shadow-card border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Umbrella className="w-4 h-4 text-primary" />
+            Apply for Leave
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Start Date */}
               <div className="space-y-1.5">
-                <Label>Leave Type</Label>
-                <Select value={leaveType} onValueChange={(v) => setLeaveType(v as LeaveType)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEAVE_TYPES.map(lt => (
-                      <SelectItem key={lt} value={lt}>{lt}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Start Date</Label>
+                <Popover open={startOpen} onOpenChange={setStartOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, 'PPP') : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(d) => { setStartDate(d); setStartOpen(false); }}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
-              {/* Reason */}
+              {/* End Date */}
               <div className="space-y-1.5">
-                <Label>Reason (optional)</Label>
-                <Textarea
-                  placeholder="Brief reason for leave..."
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={3}
-                />
+                <Label>End Date</Label>
+                <Popover open={endOpen} onOpenChange={setEndOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn('w-full justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, 'PPP') : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(d) => { setEndDate(d); setEndOpen(false); }}
+                      disabled={(d) => startDate ? d < startDate : false}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
+            </div>
 
-              <Button type="submit" className="w-full">
-                <Umbrella className="w-4 h-4 mr-2" />
-                Submit Leave Request
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+            {/* Leave Type */}
+            <div className="space-y-1.5">
+              <Label>Leave Type</Label>
+              <Select value={leaveType} onValueChange={(v) => setLeaveType(v as LeaveType)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAVE_TYPES.map(lt => (
+                    <SelectItem key={lt} value={lt}>{lt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-      {/* Leave Requests Table */}
+            {/* Reason */}
+            <div className="space-y-1.5">
+              <Label>Reason (optional)</Label>
+              <Textarea
+                placeholder="Brief reason for leave..."
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <Button type="submit" className="w-full">
+              <Umbrella className="w-4 h-4 mr-2" />
+              Submit Leave Request
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* My Leave Requests */}
       <Card className="bg-gradient-card shadow-card border-0">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle className="text-base">
-              {isManager ? 'All Leave Requests' : 'My Leave Requests'}
-            </CardTitle>
+            <CardTitle className="text-base">My Leave Requests</CardTitle>
             {/* Status filter */}
             <div className="flex gap-1.5 flex-wrap">
               {(['all', 'pending', 'approved', 'rejected'] as const).map(s => (
@@ -244,13 +223,13 @@ export const LeaveManagement = () => {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {myLeaves.length === 0 ? (
+          {displayed.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground text-sm">
               No leave requests found.
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {myLeaves.map(leave => (
+              {displayed.map(leave => (
                 <div key={leave.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="space-y-0.5">
@@ -271,35 +250,6 @@ export const LeaveManagement = () => {
                       {leave.status.charAt(0).toUpperCase() + leave.status.slice(1)}
                     </Badge>
                   </div>
-
-                  {/* Manager actions */}
-                  {isManager && leave.status === 'pending' && (
-                    <div className="space-y-2 pt-1">
-                      <Textarea
-                        placeholder="Optional review note..."
-                        className="text-xs h-16"
-                        value={reviewNote[leave.id] || ''}
-                        onChange={e => setReviewNote(prev => ({ ...prev, [leave.id]: e.target.value }))}
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-success/80 hover:bg-success text-success-foreground gap-1.5 h-8"
-                          onClick={() => handleAction(leave.id, 'approved')}
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="gap-1.5 h-8"
-                          onClick={() => handleAction(leave.id, 'rejected')}
-                        >
-                          <XCircle className="w-3.5 h-3.5" /> Reject
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
