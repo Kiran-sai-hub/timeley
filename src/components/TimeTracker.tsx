@@ -53,7 +53,7 @@ export const TimeTracker = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Timely</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Timeley</h1>
           <p className="text-muted-foreground text-lg">
             {currentTime.toLocaleDateString('en-US', { 
               weekday: 'long', 
