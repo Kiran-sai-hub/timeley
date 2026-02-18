@@ -1,127 +1,63 @@
+Remove Manager View Toggle — Prep for Backend Role-Based Access
 
-## Adding Hours Breakdown & Leave Management to Calendar View
+### The Problem
 
-### Overview
+The current `LeaveManagement` component has a `Switch` toggle that lets anyone flip between Employee and Manager mode. This is wrong because:
 
-Two major features will be added:
+- It's a frontend-only illusion of access control
+- Any user can grant themselves manager powers
+- When you add auth later (`db.users.findOne({username})`), this toggle will be dead code and confusing
 
-1. **Hours Breakdown Panel** — A "Pay Period Breakdown" style table (inspired by the Amazon A-to-Z screenshot) showing Regular Hours, Overtime, and time-off used, broken down by type.
-2. **Leave Management System** — Employees apply for leaves; a "Manager" toggle lets a simulated manager view all requests and approve/reject them, all stored in localStorage.
+### The Fix — Clean Employee-Only View
 
-A third tab "Leave" will be added to the existing two-tab navigation (Dashboard, Calendar), making it a 3-tab layout.
+The component will be simplified to show **only the employee's perspective**. The manager approval UI will be stripped out and preserved as a comment/note for when the backend role-passing is wired up later.
 
----
+#### What gets removed:
 
-### Technical Changes
+- The `isManager` state variable
+- The `Switch` toggle and the entire "Manager View" header bar
+- The `ShieldCheck` icon and "Manager View" label
+- The manager Approve/Reject action buttons inside each leave card
+- The `reviewNote` state (only used by manager actions)
+- The `handleAction` function (only used by manager)
+- Conditional title `{isManager ? 'All Leave Requests' : 'My Leave Requests'}` → always "My Leave Requests"
+- Unused imports: `Switch`, `ShieldCheck`, `updateLeaveStatus` (no longer called from UI)
 
-#### 1. `src/lib/timeTracking.ts` — New Types & Functions
+#### What stays (Employee view, unchanged):
 
-Add leave management data structures and storage helpers:
+- Apply for Leave form (date pickers, leave type, reason, submit)
+- My Leave Requests list with status badges (Pending / Approved / Rejected)
+- Status filter buttons (All / Pending / Approved / Rejected)
+- Review notes display (read-only — employees can still *see* a note a manager left)
+
+#### Future-proofing — prop-based role injection:
+
+The component signature will be updated to accept an optional `role` prop:
 
 ```typescript
-export type LeaveType = 'Annual Leave' | 'Sick Leave' | 'Casual Leave' | 'Holiday';
-export type LeaveStatus = 'pending' | 'approved' | 'rejected';
-
-export interface LeaveRequest {
-  id: string;
-  startDate: string;       // ISO date string
-  endDate: string;
-  leaveType: LeaveType;
-  reason: string;
-  status: LeaveStatus;
-  appliedAt: string;       // ISO date string
-  reviewedAt?: string;
-  reviewNote?: string;
+interface LeaveManagementProps {
+  role?: 'employee' | 'manager'; // Will come from auth context later
 }
+
+export const LeaveManagement = ({ role = 'employee' }: LeaveManagementProps) => { ... }
 ```
 
-New helper functions:
-- `getStoredLeaveRequests()` — load from localStorage
-- `saveLeaveRequest(req)` — add/update leave in localStorage
-- `updateLeaveStatus(id, status, note)` — manager approval/rejection
-- `getLeaveRequestsForMonth(year, month)` — filter by month for calendar overlay
-- `calculateLeaveHours(leaves)` — tally approved leave by type for breakdown table
-- `getHoursBreakdown(entries, leaves, year, month)` — returns structured breakdown with Regular Hours, Overtime (>8h/day), Sick Leave hours, etc.
+This means when you wire up your backend auth:
 
-#### 2. `src/components/HoursBreakdown.tsx` — New Component
-
-Displays a "Pay Period Breakdown" card styled like the reference screenshot — a clean dark-header table showing:
-
-**Work Hours Breakdown:**
-| Time Type | Pay Period Total |
-|---|---|
-| Regular Hours | 131h 58m |
-| Overtime | 8h 30m |
-| Sick Leave | 0h |
-| Annual Leave | 16h |
-| Casual Leave | 8h |
-
-Two sections:
-- **Hours Worked** (Regular + Overtime, calculated from punch entries)
-- **Time Off Used** (from approved leave requests, broken down by leave type)
-
-This will be embedded in the CalendarView below the weekly stats cards.
-
-#### 3. `src/components/LeaveManagement.tsx` — New Component
-
-A full leave request and management interface with two modes:
-
-**Employee Mode:**
-- Form to submit a new leave request (date range picker, leave type dropdown, reason text area)
-- Table of own leave requests with status badges (Pending / Approved / Rejected)
-
-**Manager Mode (toggle switch to simulate):**
-- View all pending leave requests from all "employees" (stored in localStorage)
-- Approve / Reject buttons with an optional review note
-- Filter by status (All / Pending / Approved / Rejected)
-
-#### 4. `src/components/CalendarView.tsx` — Enhancements
-
-- Import and render `HoursBreakdown` component below the weekly stats
-- Overlay leave days on the calendar with a new color (blue for approved leaves, yellow for pending)
-- Update the legend to include "On Leave" indicator
-- Update the day-click modal to show if a leave was taken on that day
-
-#### 5. `src/components/TimeTracker.tsx` — New Tab
-
-- Change grid from `grid-cols-2` to `grid-cols-3`
-- Add a third tab: "Leave" with a `FileText` or `Umbrella` icon
-- Render `<LeaveManagement />` in the new tab content
-
----
-
-### Data Flow
-
-```text
-localStorage
-  ├── timeTracking_entries   (existing punch records)
-  └── timeTracking_leaves    (new leave requests)
-
-CalendarView
-  ├── reads entries + leaves
-  ├── passes leaves to HoursBreakdown
-  └── overlays approved leaves on calendar dates
-
-LeaveManagement
-  ├── Employee: creates leave requests → saved to localStorage
-  └── Manager: reads all requests → updates status in localStorage
+```typescript
+// Future usage in TimeTracker.tsx
+const { user } = useAuth(); // from your auth system
+<LeaveManagement role={user.role} />
 ```
 
-### Leave Color Coding in Calendar
+The manager-specific JSX (Approve/Reject buttons, review note textarea, `updateLeaveStatus` call) will be added back **conditioned on `role === 'manager'**` at that point — but driven by real backend data, not a toggle.
 
-- Green = Full working day (8h+)
-- Orange = Partial day
-- Blue = Approved leave
-- Yellow/Amber = Pending leave
-- Red dot = Incomplete shift
-- Gray = Absent / Weekend
+### Files Changed
 
-### Implementation Files Summary
 
-| File | Action |
-|---|---|
-| `src/lib/timeTracking.ts` | Add leave types, interfaces, storage helpers, and breakdown calculator |
-| `src/components/HoursBreakdown.tsx` | Create new hours breakdown table component |
-| `src/components/LeaveManagement.tsx` | Create new leave application + manager approval component |
-| `src/components/CalendarView.tsx` | Add leave overlays, import HoursBreakdown, update day detail modal |
-| `src/components/TimeTracker.tsx` | Add third "Leave" tab |
+| File                                 | Change                                                                          |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| `src/components/LeaveManagement.tsx` | Remove toggle, manager state, manager action UI; add `role` prop for future use |
+
+
+No other files need to change — `TimeTracker.tsx` renders `<LeaveManagement />` without passing role for now, which defaults to `'employee'`.
