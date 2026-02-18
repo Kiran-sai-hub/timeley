@@ -5,9 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+
+const DEPARTMENTS = ['Engineering', 'Administration', 'Marketing', 'Sales', 'HR'];
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -47,7 +50,7 @@ export default function Login() {
         email,
         password,
         role,
-        department: department || undefined,
+        department,
       });
       toast({ title: 'Account created successfully!' });
       navigate('/');
@@ -143,13 +146,19 @@ export default function Login() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="department">Department (optional)</Label>
-                  <Input
-                    id="department"
-                    placeholder="Engineering"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                  />
+                  <Label htmlFor="department">Department</Label>
+                  <Select value={department} onValueChange={setDepartment} required>
+                    <SelectTrigger id="department">
+                      <SelectValue placeholder="Select a department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEPARTMENTS.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Role</Label>
