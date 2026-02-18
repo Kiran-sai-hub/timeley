@@ -1,15 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogTrigger 
-} from '@/components/ui/dialog';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -18,7 +10,6 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
-  Umbrella
 } from 'lucide-react';
 import { 
   TimeEntry, 
@@ -27,25 +18,22 @@ import {
   getWorkingDaysInMonth, 
   getWeeklyStats,
   getWeekStart,
-  formatTime,
   formatHours,
   WorkingDay,
   getStoredLeaveRequests,
   getLeaveDatesForMonth,
 } from '@/lib/timeTracking';
 import { HoursBreakdown } from './HoursBreakdown';
+import { DayDetailPanel } from './DayDetailPanel';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
   entries: TimeEntry[];
 }
 
-export type LeaveStatusColor = 'approved' | 'pending';
-
 export const CalendarView = ({ entries }: CalendarViewProps) => {
   const [viewMonth, setViewMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedDay, setSelectedDay] = useState<WorkingDay | null>(null);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
 
   const currentYear = viewMonth.getFullYear();
@@ -55,7 +43,6 @@ export const CalendarView = ({ entries }: CalendarViewProps) => {
   const weekStart = getWeekStart(new Date());
   const weeklyStats = getWeeklyStats(weekStart, entries);
 
-  // Refresh leaves whenever calendar is shown or month changes
   useEffect(() => {
     setLeaves(getStoredLeaveRequests());
   }, [currentYear, currentMonth]);
@@ -106,10 +93,10 @@ export const CalendarView = ({ entries }: CalendarViewProps) => {
     }
 
     return (
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-0.5">
         <span>{date.getDate()}</span>
         {dayInfo.totalHours > 0 && (
-          <div className="text-xs bg-primary/10 text-primary px-1 rounded">
+          <div className="text-xs bg-primary/10 text-primary px-1 rounded leading-tight">
             {Math.round(dayInfo.totalHours)}h
           </div>
         )}
@@ -127,6 +114,16 @@ export const CalendarView = ({ entries }: CalendarViewProps) => {
       return newMonth;
     });
   };
+
+  // Derive selected day data
+  const selectedDayInfo = workingDays.find(
+    wd => wd.date.toDateString() === selectedDate.toDateString()
+  );
+  const selectedDayLeave = leaves.find(l => {
+    const s = new Date(l.startDate);
+    const e = new Date(l.endDate);
+    return selectedDate >= s && selectedDate <= e;
+  });
 
   return (
     <div className="space-y-6">
@@ -193,7 +190,7 @@ export const CalendarView = ({ entries }: CalendarViewProps) => {
         month={currentMonth}
       />
 
-      {/* Calendar */}
+      {/* Calendar + Day Detail Panel */}
       <Card className="bg-gradient-card shadow-card border-0">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -215,161 +212,95 @@ export const CalendarView = ({ entries }: CalendarViewProps) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* Legend */}
-            <div className="flex flex-wrap gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-success/20 border border-success/30 rounded"></div>
-                <span>Working Day</span>
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:divide-x divide-border">
+            {/* Left: Calendar */}
+            <div className="lg:col-span-3 pr-0 lg:pr-6 pb-6 lg:pb-0">
+              {/* Legend */}
+              <div className="flex flex-wrap gap-3 text-xs mb-4">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 bg-success/20 border border-success/30 rounded"></div>
+                  <span>Working</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 bg-warning/20 border border-warning/30 rounded"></div>
+                  <span>Partial</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 bg-muted border border-border rounded"></div>
+                  <span>Absent</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 bg-primary/20 border border-primary/30 rounded"></div>
+                  <span>Leave</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 bg-destructive rounded-full"></div>
+                  <span>Incomplete</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-warning/20 border border-warning/30 rounded"></div>
-                <span>Partial Day</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-muted border border-border rounded"></div>
-                <span>Absent</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-primary/20 border border-primary/30 rounded"></div>
-                <span>Approved Leave</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-warning/30 border border-warning/40 rounded"></div>
-                <span>Pending Leave</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-destructive rounded-full"></div>
-                <span>Incomplete Shift</span>
-              </div>
+
+              {/* Calendar */}
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                month={viewMonth}
+                onMonthChange={setViewMonth}
+                className="pointer-events-auto w-full"
+                classNames={{
+                  months: "w-full",
+                  month: "w-full",
+                  table: "w-full border-collapse",
+                  head_row: "flex w-full",
+                  head_cell: "text-muted-foreground flex-1 font-normal text-[0.8rem] text-center",
+                  row: "flex w-full mt-1",
+                  cell: "flex-1 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                  day: "w-full h-12 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors",
+                  day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                  day_today: "bg-accent text-accent-foreground font-semibold",
+                  day_outside: "text-muted-foreground opacity-40",
+                  day_disabled: "text-muted-foreground opacity-50",
+                  day_hidden: "invisible",
+                  caption: "hidden",
+                  nav: "hidden",
+                }}
+                modifiers={{
+                  working: workingDays.filter(wd => wd.status === 'working').map(wd => wd.date),
+                  partial: workingDays.filter(wd => wd.status === 'partial').map(wd => wd.date),
+                  absent: workingDays.filter(wd => wd.status === 'absent').map(wd => wd.date),
+                }}
+                modifiersClassNames={{
+                  working: 'bg-success/20 text-success-foreground hover:bg-success/30',
+                  partial: 'bg-warning/20 text-warning-foreground hover:bg-warning/30',
+                  absent: 'text-muted-foreground hover:bg-muted/30',
+                }}
+                components={{
+                  Day: ({ date, ...props }) => (
+                    <button
+                      className={cn(
+                        'w-full h-12 p-1 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-sm',
+                        getDayClassName(date),
+                        selectedDate.toDateString() === date.toDateString()
+                          ? 'ring-2 ring-primary ring-offset-1'
+                          : ''
+                      )}
+                      onClick={() => setSelectedDate(date)}
+                    >
+                      {renderDayContent(date)}
+                    </button>
+                  ),
+                }}
+              />
             </div>
 
-            {/* Calendar Grid */}
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              month={viewMonth}
-              onMonthChange={setViewMonth}
-              className="pointer-events-auto"
-              modifiers={{
-                working: workingDays.filter(wd => wd.status === 'working').map(wd => wd.date),
-                partial: workingDays.filter(wd => wd.status === 'partial').map(wd => wd.date),
-                absent: workingDays.filter(wd => wd.status === 'absent').map(wd => wd.date),
-              }}
-              modifiersClassNames={{
-                working: 'bg-success/20 text-success-foreground hover:bg-success/30',
-                partial: 'bg-warning/20 text-warning-foreground hover:bg-warning/30',
-                absent: 'text-muted-foreground hover:bg-muted/30',
-              }}
-              components={{
-                Day: ({ date, ...props }) => {
-                  const dayInfo = getDateStatus(date);
-                  const leaveStatus = getLeaveStatus(date);
-                  const leaveForDay = leaves.find(l => {
-                    const s = new Date(l.startDate);
-                    const e = new Date(l.endDate);
-                    return date >= s && date <= e;
-                  });
-
-                  return (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button
-                          className={cn(
-                            'w-full h-full p-1 hover:bg-accent hover:text-accent-foreground',
-                            getDayClassName(date)
-                          )}
-                          onClick={() => setSelectedDay(dayInfo || null)}
-                        >
-                          {renderDayContent(date)}
-                        </button>
-                      </DialogTrigger>
-                      {(dayInfo || leaveForDay) && (
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <CalendarIcon className="w-5 h-5" />
-                              {date.toLocaleDateString('en-US', {
-                                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                              })}
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            {/* Leave info */}
-                            {leaveForDay && (
-                              <div className={cn(
-                                'flex items-center gap-2 p-3 rounded-md',
-                                leaveForDay.status === 'approved' ? 'bg-primary/10' : 'bg-warning/10'
-                              )}>
-                                <Umbrella className="w-4 h-4 shrink-0" />
-                                <div>
-                                  <p className="text-sm font-medium">{leaveForDay.leaveType}</p>
-                                  <p className="text-xs text-muted-foreground capitalize">
-                                    Status: {leaveForDay.status}
-                                    {leaveForDay.reviewNote && ` — ${leaveForDay.reviewNote}`}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {dayInfo && (
-                              <>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm text-muted-foreground">Status:</span>
-                                  <Badge
-                                    variant={
-                                      dayInfo.status === 'working' ? 'default' :
-                                      dayInfo.status === 'partial' ? 'secondary' : 'outline'
-                                    }
-                                    className={
-                                      dayInfo.status === 'working' ? 'bg-success text-success-foreground' :
-                                      dayInfo.status === 'partial' ? 'bg-warning text-warning-foreground' : ''
-                                    }
-                                  >
-                                    {dayInfo.status.charAt(0).toUpperCase() + dayInfo.status.slice(1)}
-                                  </Badge>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm text-muted-foreground">Total Hours:</span>
-                                  <span className="font-medium">{formatHours(dayInfo.totalHours)}</span>
-                                </div>
-
-                                {dayInfo.hasIncompleteShift && (
-                                  <div className="flex items-center gap-2 p-2 bg-destructive/10 text-destructive rounded">
-                                    <AlertCircle className="w-4 h-4" />
-                                    <span className="text-sm">Incomplete shift detected</span>
-                                  </div>
-                                )}
-
-                                {dayInfo.entries.length > 0 && (
-                                  <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Time Entries:</h4>
-                                    <div className="space-y-1">
-                                      {dayInfo.entries
-                                        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-                                        .map((entry) => (
-                                          <div key={entry.id} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                                            <span className="font-mono text-sm">{formatTime(entry.timestamp)}</span>
-                                            <Badge variant={entry.action === 'IN' ? 'default' : 'secondary'}>
-                                              {entry.action}
-                                            </Badge>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </DialogContent>
-                      )}
-                    </Dialog>
-                  );
-                }
-              }}
-            />
+            {/* Right: Day Detail Panel */}
+            <div className="lg:col-span-2 pt-6 lg:pt-0 lg:pl-6">
+              <DayDetailPanel
+                date={selectedDate}
+                dayInfo={selectedDayInfo}
+                leaveForDay={selectedDayLeave}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
