@@ -1,23 +1,22 @@
-const { validationResult, body, query } = require('express-validator');
-const TimeEntry = require('../models/TimeEntry');
-const LeaveRequest = require('../models/LeaveRequest');
-const {
+import { validationResult, body } from 'express-validator';
+import TimeEntry from '../models/TimeEntry.js';
+import LeaveRequest from '../models/LeaveRequest.js';
+import {
     getEntriesInRange,
     calculateDailyHours,
     calculateAggregatedHours,
     getWorkingDaysInMonth,
     getWeeklyStats,
     getHoursBreakdown,
-    isWeekend,
-} = require('../utils/hoursCalc');
+} from '../utils/hoursCalc.js';
 
 // ───── Validation rules ─────
-const punchValidation = [
+export const punchValidation = [
     body('action').isIn(['IN', 'OUT']).withMessage('Action must be IN or OUT'),
 ];
 
 // ─────── POST /api/time-entries  (Punch IN / OUT) ───────
-const createEntry = async (req, res, next) => {
+export const createEntry = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -70,7 +69,7 @@ const createEntry = async (req, res, next) => {
 };
 
 // ─────── GET /api/time-entries ───────
-const getEntries = async (req, res, next) => {
+export const getEntries = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const filter = { userId };
@@ -100,7 +99,7 @@ const getEntries = async (req, res, next) => {
 };
 
 // ─────── GET /api/time-entries/daily-summary ───────
-const getDailySummary = async (req, res, next) => {
+export const getDailySummary = async (req, res, next) => {
     try {
         const dateStr = req.query.date;
         if (!dateStr) {
@@ -131,7 +130,7 @@ const getDailySummary = async (req, res, next) => {
 };
 
 // ─────── GET /api/time-entries/monthly ───────
-const getMonthlyHours = async (req, res, next) => {
+export const getMonthlyHours = async (req, res, next) => {
     try {
         const { year, month } = req.query;
         if (year == null || month == null) {
@@ -159,7 +158,7 @@ const getMonthlyHours = async (req, res, next) => {
 };
 
 // ─────── GET /api/time-entries/yearly ───────
-const getYearlyHours = async (req, res, next) => {
+export const getYearlyHours = async (req, res, next) => {
     try {
         const { year } = req.query;
         if (year == null) {
@@ -186,7 +185,7 @@ const getYearlyHours = async (req, res, next) => {
 };
 
 // ─────── GET /api/time-entries/weekly-stats ───────
-const getWeeklyStatsHandler = async (req, res, next) => {
+export const getWeeklyStatsHandler = async (req, res, next) => {
     try {
         const weekStartStr = req.query.weekStart;
         let weekStart;
@@ -215,7 +214,7 @@ const getWeeklyStatsHandler = async (req, res, next) => {
 };
 
 // ─────── GET /api/time-entries/working-days ───────
-const getWorkingDaysHandler = async (req, res, next) => {
+export const getWorkingDaysHandler = async (req, res, next) => {
     try {
         const { year, month } = req.query;
         if (year == null || month == null) {
@@ -240,7 +239,7 @@ const getWorkingDaysHandler = async (req, res, next) => {
 };
 
 // ─────── GET /api/time-entries/hours-breakdown ───────
-const getHoursBreakdownHandler = async (req, res, next) => {
+export const getHoursBreakdownHandler = async (req, res, next) => {
     try {
         const { year, month } = req.query;
         if (year == null || month == null) {
@@ -271,7 +270,7 @@ const getHoursBreakdownHandler = async (req, res, next) => {
 };
 
 // ─────── GET /api/time-entries/overtime ───────
-const getOvertimeHandler = async (req, res, next) => {
+export const getOvertimeHandler = async (req, res, next) => {
     try {
         const userId = req.user._id;
         let start, end, periodLabel;
@@ -314,17 +313,4 @@ const getOvertimeHandler = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};
-
-module.exports = {
-    punchValidation,
-    createEntry,
-    getEntries,
-    getDailySummary,
-    getMonthlyHours,
-    getYearlyHours,
-    getWeeklyStatsHandler,
-    getWorkingDaysHandler,
-    getHoursBreakdownHandler,
-    getOvertimeHandler,
 };
