@@ -1,7 +1,7 @@
-const router = require('express').Router();
-const auth = require('../middleware/auth');
-const roleGuard = require('../middleware/roleGuard');
-const {
+import express from 'express';
+import auth from '../middleware/auth.js';
+import roleGuard from '../middleware/roleGuard.js';
+import {
     submitValidation,
     reviewValidation,
     submitLeave,
@@ -10,7 +10,9 @@ const {
     getLeaveById,
     reviewLeave,
     getTeamLeaves,
-} = require('../controllers/leaveRequestController');
+} from '../controllers/leaveRequestController.js';
+
+const router = express.Router();
 
 // All routes require authentication
 router.use(auth);
@@ -25,4 +27,4 @@ router.get('/:id', getLeaveById);
 // Manager-only route
 router.patch('/:id/review', roleGuard('manager', 'admin'), reviewValidation, reviewLeave);
 
-module.exports = router;
+export default router;

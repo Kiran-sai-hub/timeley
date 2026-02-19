@@ -1,15 +1,16 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const connectDB = require('./config/db');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import connectDB from './config/db.js';
 
 // Route imports
-const authRoutes = require('./routes/auth');
-const timeEntryRoutes = require('./routes/timeEntries');
-const leaveRequestRoutes = require('./routes/leaveRequests');
+import authRoutes from './routes/auth.js';
+import timeEntryRoutes from './routes/timeEntries.js';
+import leaveRequestRoutes from './routes/leaveRequests.js';
 
 const app = express();
 

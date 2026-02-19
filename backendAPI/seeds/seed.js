@@ -1,21 +1,16 @@
-/**
- * Seed script — populates the database with sample data for development.
- *
- * Usage:  node seeds/seed.js
- *
- * Creates:
- *   • 1 manager  (manager@timely.com  /  password123)
- *   • 2 employees (alice@timely.com, bob@timely.com  /  password123)
- *   • Sample time entries for the past 5 working days
- *   • 2 sample leave requests
- */
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
-const mongoose = require('mongoose');
-const User = require('../models/User');
-const TimeEntry = require('../models/TimeEntry');
-const LeaveRequest = require('../models/LeaveRequest');
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import User from '../models/User.js';
+import TimeEntry from '../models/TimeEntry.js';
+import LeaveRequest from '../models/LeaveRequest.js';
+import connectDB from '../config/db.js';
 
-const connectDB = require('../config/db');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const seed = async () => {
     await connectDB();
