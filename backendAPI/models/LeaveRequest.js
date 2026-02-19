@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const leaveRequestSchema = new mongoose.Schema(
     {
@@ -23,4 +23,4 @@ const leaveRequestSchema = new mongoose.Schema(
 leaveRequestSchema.index({ userId: 1, status: 1 });
 leaveRequestSchema.index({ startDate: 1, endDate: 1 });
 
-module.exports = mongoose.model('LeaveRequest', leaveRequestSchema);
+export default mongoose.model('LeaveRequest', leaveRequestSchema);

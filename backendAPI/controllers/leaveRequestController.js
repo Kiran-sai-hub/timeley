@@ -1,9 +1,9 @@
-const { validationResult, body } = require('express-validator');
-const LeaveRequest = require('../models/LeaveRequest');
-const User = require('../models/User');
+import { validationResult, body } from 'express-validator';
+import LeaveRequest from '../models/LeaveRequest.js';
+import User from '../models/User.js';
 
 // ───── Validation rules ─────
-const submitValidation = [
+export const submitValidation = [
     body('startDate').notEmpty().withMessage('Start date is required'),
     body('endDate').notEmpty().withMessage('End date is required'),
     body('leaveType')
@@ -12,13 +12,13 @@ const submitValidation = [
     body('reason').optional().trim(),
 ];
 
-const reviewValidation = [
+export const reviewValidation = [
     body('status').isIn(['approved', 'rejected']).withMessage('Status must be approved or rejected'),
     body('reviewNote').optional().trim(),
 ];
 
 // ─────── POST /api/leave-requests ───────
-const submitLeave = async (req, res, next) => {
+export const submitLeave = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -56,7 +56,7 @@ const submitLeave = async (req, res, next) => {
 };
 
 // ─────── GET /api/leave-requests ───────
-const getMyLeaves = async (req, res, next) => {
+export const getMyLeaves = async (req, res, next) => {
     try {
         const filter = { userId: req.user._id };
 
@@ -73,7 +73,7 @@ const getMyLeaves = async (req, res, next) => {
 };
 
 // ─────── GET /api/leave-requests/month ───────
-const getLeavesForMonth = async (req, res, next) => {
+export const getLeavesForMonth = async (req, res, next) => {
     try {
         const { year, month } = req.query;
         if (year == null || month == null) {
@@ -116,7 +116,7 @@ const getLeavesForMonth = async (req, res, next) => {
 };
 
 // ─────── GET /api/leave-requests/:id ───────
-const getLeaveById = async (req, res, next) => {
+export const getLeaveById = async (req, res, next) => {
     try {
         const leave = await LeaveRequest.findOne({
             _id: req.params.id,
@@ -137,7 +137,7 @@ const getLeaveById = async (req, res, next) => {
 };
 
 // ─────── PATCH /api/leave-requests/:id/review  (Manager only) ───────
-const reviewLeave = async (req, res, next) => {
+export const reviewLeave = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -200,7 +200,7 @@ const reviewLeave = async (req, res, next) => {
 };
 
 // ─────── GET /api/leave-requests/team  (Manager / Admin) ───────
-const getTeamLeaves = async (req, res, next) => {
+export const getTeamLeaves = async (req, res, next) => {
     try {
         const { role, department, _id: currentUserId } = req.user;
 
@@ -232,15 +232,4 @@ const getTeamLeaves = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};
-
-module.exports = {
-    submitValidation,
-    reviewValidation,
-    submitLeave,
-    getMyLeaves,
-    getLeavesForMonth,
-    getLeaveById,
-    reviewLeave,
-    getTeamLeaves,
 };

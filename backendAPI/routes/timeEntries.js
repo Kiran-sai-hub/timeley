@@ -1,6 +1,6 @@
-const router = require('express').Router();
-const auth = require('../middleware/auth');
-const {
+import express from 'express';
+import auth from '../middleware/auth.js';
+import {
     punchValidation,
     createEntry,
     getEntries,
@@ -11,7 +11,9 @@ const {
     getWorkingDaysHandler,
     getHoursBreakdownHandler,
     getOvertimeHandler,
-} = require('../controllers/timeEntryController');
+} from '../controllers/timeEntryController.js';
+
+const router = express.Router();
 
 // All routes require authentication
 router.use(auth);
@@ -26,4 +28,4 @@ router.get('/working-days', getWorkingDaysHandler);
 router.get('/hours-breakdown', getHoursBreakdownHandler);
 router.get('/overtime', getOvertimeHandler);
 
-module.exports = router;
+export default router;

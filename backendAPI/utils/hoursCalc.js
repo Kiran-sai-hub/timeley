@@ -1,9 +1,9 @@
-const TimeEntry = require('../models/TimeEntry');
+import TimeEntry from '../models/TimeEntry.js';
 
 // ──────────────────────────────────────────────
 //  Helper: is a given date a weekend?
 // ──────────────────────────────────────────────
-const isWeekend = (date) => {
+export const isWeekend = (date) => {
     const day = date.getDay();
     return day === 0 || day === 6;
 };
@@ -11,7 +11,7 @@ const isWeekend = (date) => {
 // ──────────────────────────────────────────────
 //  Get all time entries for a user in a date range
 // ──────────────────────────────────────────────
-const getEntriesInRange = async (userId, startDate, endDate) => {
+export const getEntriesInRange = async (userId, startDate, endDate) => {
     return TimeEntry.find({
         userId,
         timestamp: { $gte: startDate, $lte: endDate },
@@ -22,7 +22,7 @@ const getEntriesInRange = async (userId, startDate, endDate) => {
 //  Calculate total worked hours for a single day
 //  Pairs consecutive IN → OUT, sums durations
 // ──────────────────────────────────────────────
-const calculateDailyHours = (dayEntries) => {
+export const calculateDailyHours = (dayEntries) => {
     const sorted = [...dayEntries].sort((a, b) => a.timestamp - b.timestamp);
     let total = 0;
     let punchIn = null;
@@ -42,7 +42,7 @@ const calculateDailyHours = (dayEntries) => {
 // ──────────────────────────────────────────────
 //  Get entries grouped by date string key
 // ──────────────────────────────────────────────
-const groupEntriesByDate = (entries) => {
+export const groupEntriesByDate = (entries) => {
     const map = new Map();
     for (const entry of entries) {
         const key = entry.timestamp.toDateString();
@@ -55,7 +55,7 @@ const groupEntriesByDate = (entries) => {
 // ──────────────────────────────────────────────
 //  Determine day status: working / partial / absent / weekend
 // ──────────────────────────────────────────────
-const getWorkDayStatus = (date, dayEntries) => {
+export const getWorkDayStatus = (date, dayEntries) => {
     if (isWeekend(date)) return 'weekend';
     if (!dayEntries || dayEntries.length === 0) return 'absent';
 
@@ -72,7 +72,7 @@ const getWorkDayStatus = (date, dayEntries) => {
 // ──────────────────────────────────────────────
 //  Check if a shift is incomplete (odd entries or missing OUT)
 // ──────────────────────────────────────────────
-const hasIncompleteShift = (dayEntries) => {
+export const hasIncompleteShift = (dayEntries) => {
     if (!dayEntries || dayEntries.length === 0) return false;
     return dayEntries.length % 2 !== 0 || !dayEntries.some((e) => e.action === 'OUT');
 };
@@ -81,9 +81,9 @@ const hasIncompleteShift = (dayEntries) => {
 //  Calculate aggregated hours for a date range
 //  Returns { regularHours, overtimeHours, totalHours }
 // ──────────────────────────────────────────────
-const REGULAR_HOURS_PER_DAY = 8;
+export const REGULAR_HOURS_PER_DAY = 8;
 
-const calculateAggregatedHours = (entries, startDate, endDate) => {
+export const calculateAggregatedHours = (entries, startDate, endDate) => {
     const grouped = groupEntriesByDate(entries);
     let regularTotal = 0;
     let overtimeTotal = 0;
@@ -110,7 +110,7 @@ const calculateAggregatedHours = (entries, startDate, endDate) => {
 // ──────────────────────────────────────────────
 //  Get working days array for a month (mirrors frontend getWorkingDaysInMonth)
 // ──────────────────────────────────────────────
-const getWorkingDaysInMonth = (entries, year, month) => {
+export const getWorkingDaysInMonth = (entries, year, month) => {
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0);
     const grouped = groupEntriesByDate(entries);
@@ -139,7 +139,7 @@ const getWorkingDaysInMonth = (entries, year, month) => {
 // ──────────────────────────────────────────────
 //  Weekly stats (mirrors frontend getWeeklyStats)
 // ──────────────────────────────────────────────
-const getWeeklyStats = (entries, weekStartDate) => {
+export const getWeeklyStats = (entries, weekStartDate) => {
     const grouped = groupEntriesByDate(entries);
     let totalDaysWorked = 0;
     let totalHours = 0;
@@ -174,7 +174,7 @@ const getWeeklyStats = (entries, weekStartDate) => {
 // ──────────────────────────────────────────────
 //  Calculate leave hours by type (approved only)
 // ──────────────────────────────────────────────
-const calculateLeaveHours = (leaves) => {
+export const calculateLeaveHours = (leaves) => {
     const result = {
         'Annual Leave': 0,
         'Sick Leave': 0,
@@ -197,7 +197,7 @@ const calculateLeaveHours = (leaves) => {
 // ──────────────────────────────────────────────
 //  Full hours breakdown for a pay period (month)
 // ──────────────────────────────────────────────
-const getHoursBreakdown = (entries, leaves, year, month) => {
+export const getHoursBreakdown = (entries, leaves, year, month) => {
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0);
 
@@ -220,25 +220,9 @@ const getHoursBreakdown = (entries, leaves, year, month) => {
 // ──────────────────────────────────────────────
 //  Format hours nicely (e.g. "8h 30m")
 // ──────────────────────────────────────────────
-const formatHours = (hours) => {
+export const formatHours = (hours) => {
     const whole = Math.floor(hours);
     const minutes = Math.round((hours - whole) * 60);
     if (minutes === 0) return `${whole}h`;
     return `${whole}h ${minutes}m`;
-};
-
-module.exports = {
-    isWeekend,
-    getEntriesInRange,
-    calculateDailyHours,
-    groupEntriesByDate,
-    getWorkDayStatus,
-    hasIncompleteShift,
-    calculateAggregatedHours,
-    getWorkingDaysInMonth,
-    getWeeklyStats,
-    calculateLeaveHours,
-    getHoursBreakdown,
-    formatHours,
-    REGULAR_HOURS_PER_DAY,
 };

@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
-const { validationResult, body } = require('express-validator');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import { validationResult, body } from 'express-validator';
+import User from '../models/User.js';
 
 // Helper — sign a JWT for a user
 const signToken = (user) => {
@@ -10,7 +10,7 @@ const signToken = (user) => {
 };
 
 // ───── Validation rules (exported for routes) ─────
-const registerValidation = [
+export const registerValidation = [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
@@ -18,13 +18,13 @@ const registerValidation = [
     body('department').optional().trim(),
 ];
 
-const loginValidation = [
+export const loginValidation = [
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('password').notEmpty().withMessage('Password is required'),
 ];
 
 // ─────── POST /api/auth/register ───────
-const register = async (req, res, next) => {
+export const register = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -65,7 +65,7 @@ const register = async (req, res, next) => {
 };
 
 // ─────── POST /api/auth/login ───────
-const login = async (req, res, next) => {
+export const login = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -113,17 +113,9 @@ const login = async (req, res, next) => {
 };
 
 // ─────── GET /api/auth/me ───────
-const getMe = async (req, res) => {
+export const getMe = async (req, res) => {
     res.json({
         success: true,
         data: { user: req.user },
     });
-};
-
-module.exports = {
-    register,
-    registerValidation,
-    login,
-    loginValidation,
-    getMe,
 };

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const timeEntrySchema = new mongoose.Schema(
     {
@@ -13,4 +13,4 @@ const timeEntrySchema = new mongoose.Schema(
 // Compound index for fast per-user, date-range queries
 timeEntrySchema.index({ userId: 1, timestamp: -1 });
 
-module.exports = mongoose.model('TimeEntry', timeEntrySchema);
+export default mongoose.model('TimeEntry', timeEntrySchema);
