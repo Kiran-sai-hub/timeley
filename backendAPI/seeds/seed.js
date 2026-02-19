@@ -56,7 +56,7 @@ const seed = async () => {
         managerId: manager._id,
     });
 
-    console.log('  ✅ Users created (including admin)');
+    console.log('Users created (including admin)');
 
     // ── Time Entries (past 5 working days for Alice) ──
     const entries = [];
@@ -86,7 +86,7 @@ const seed = async () => {
     }
 
     await TimeEntry.insertMany(entries);
-    console.log(`  ✅ ${entries.length} time entries created for Alice`);
+    console.log(`${entries.length} time entries created for Alice`);
 
     // ── Leave Requests ──
     const nextWeek = new Date(today);
@@ -114,9 +114,9 @@ const seed = async () => {
         appliedAt: new Date(),
     });
 
-    console.log('  ✅ Leave requests created');
-    console.log('\n🎉 Seeding complete!');
-    console.log('\n📋 Test accounts:');
+    console.log('Leave requests created');
+    console.log('\n Seeding complete!');
+    console.log('\n Test accounts:');
     console.log('   Admin:    admin@timely.com     /  password123');
     console.log('   Manager:  manager@timely.com   /  password123');
     console.log('   Employee: alice@timely.com      /  password123');

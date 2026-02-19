@@ -29,7 +29,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // --------------- Routes ---------------
 app.get('/api/health', (_req, res) => {
-    res.json({ success: true, message: 'Timely API is running 🚀', timestamp: new Date().toISOString() });
+    res.json({ success: true, message: 'Timely API is running', timestamp: new Date().toISOString() });
 });
 
 app.use('/api/auth', authRoutes);
