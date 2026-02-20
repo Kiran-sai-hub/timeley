@@ -17,7 +17,6 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [department, setDepartment] = useState('');
-  const [role, setRole] = useState<'employee' | 'manager'>('employee');
   const [isLoading, setIsLoading] = useState(false);
   const { login, register } = useAuth();
   const { toast } = useToast();
@@ -49,7 +48,6 @@ export default function Login() {
         name,
         email,
         password,
-        role,
         department,
       });
       toast({ title: 'Account created successfully!' });
@@ -159,31 +157,6 @@ export default function Login() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Role</Label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="role"
-                        value="employee"
-                        checked={role === 'employee'}
-                        onChange={() => setRole('employee')}
-                      />
-                      Employee
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="role"
-                        value="manager"
-                        checked={role === 'manager'}
-                        onChange={() => setRole('manager')}
-                      />
-                      Manager
-                    </label>
-                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
