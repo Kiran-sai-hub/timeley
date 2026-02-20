@@ -1,4 +1,5 @@
 import { validationResult, body } from 'express-validator';
+import mongoose from 'mongoose';
 import TimeEntry from '../models/TimeEntry.js';
 import LeaveRequest from '../models/LeaveRequest.js';
 import {
@@ -17,9 +18,14 @@ export const punchValidation = [
 
 // ─────── POST /api/time-entries  (Punch IN / OUT) ───────
 export const createEntry = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).json({
                 success: false,
                 error: { code: 'VALIDATION_ERROR', message: 'Validation failed', details: errors.array() },
@@ -44,26 +50,35 @@ export const createEntry = async (req, res, next) => {
         const isCurrentlyIn = lastEntry?.action === 'IN';
 
         if (action === 'IN' && isCurrentlyIn) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(409).json({
                 success: false,
                 error: { code: 'ALREADY_PUNCHED_IN', message: 'You are already punched in' },
             });
         }
         if (action === 'OUT' && !isCurrentlyIn) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(409).json({
                 success: false,
                 error: { code: 'ALREADY_PUNCHED_OUT', message: 'You are not currently punched in' },
             });
         }
 
-        const entry = await TimeEntry.create({
+        const entry = await TimeEntry.create([{
             userId,
             action,
             timestamp: new Date(), // server-generated timestamp
-        });
+        }], { session });
 
-        res.status(201).json({ success: true, data: entry });
+        await session.commitTransaction();
+        session.endSession();
+
+        res.status(201).json({ success: true, data: entry[0] });
     } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
         next(error);
     }
 };

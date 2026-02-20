@@ -1,9 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { authApi, User, LoginCredentials, RegisterData, STORAGE_KEYS } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
@@ -29,39 +28,68 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Initialize auth state from localStorage on mount
+  // Token is now stored in an httpOnly cookie — we validate by calling /auth/me
   useEffect(() => {
     const initializeAuth = async () => {
-      const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+      // Check if we have cached user info for quick UI display
       const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-
-        // Verify token is still valid by fetching current user
+      if (storedUser) {
         try {
-          const response = await authApi.getMe();
-          if (response.success) {
-            setUser(response.data.user);
-            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
-          } else {
-            // Token invalid, clear auth state
-            logout();
-          }
+          setUser(JSON.parse(storedUser));
         } catch {
-          logout();
+          localStorage.removeItem(STORAGE_KEYS.USER);
         }
       }
+
+      // Verify session with the server (cookie is sent automatically)
+      try {
+        const response = await authApi.getMe();
+        if (response.success) {
+          setUser(response.data.user);
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
+        } else {
+          handleSessionExpired();
+        }
+      } catch {
+        // No valid session — clear any stale cached user
+        handleSessionExpired();
+      }
+
       setIsLoading(false);
     };
 
     initializeAuth();
   }, []);
+
+  // Periodic token refresh — every 6 hours
+  useEffect(() => {
+    if (user) {
+      refreshIntervalRef.current = setInterval(async () => {
+        try {
+          await authApi.refresh();
+        } catch {
+          // Refresh failed — session may have expired
+          handleSessionExpired();
+        }
+      }, 6 * 60 * 60 * 1000); // 6 hours
+    }
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
+    };
+  }, [user]);
+
+  const handleSessionExpired = () => {
+    setUser(null);
+    localStorage.removeItem(STORAGE_KEYS.USER);
+  };
 
   const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);
@@ -69,10 +97,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const response = await authApi.login(credentials);
       if (response.success) {
-        const { token: newToken, user: newUser } = response.data;
-        setToken(newToken);
+        const { user: newUser } = response.data;
         setUser(newUser);
-        localStorage.setItem(STORAGE_KEYS.TOKEN, newToken);
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser));
       }
     } catch (err) {
@@ -90,10 +116,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const response = await authApi.register(data);
       if (response.success) {
-        const { token: newToken, user: newUser } = response.data;
-        setToken(newToken);
+        const { user: newUser } = response.data;
         setUser(newUser);
-        localStorage.setItem(STORAGE_KEYS.TOKEN, newToken);
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser));
       }
     } catch (err) {
@@ -105,11 +129,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authApi.logout(); // Clears the httpOnly cookie server-side
+    } catch {
+      // Even if the server call fails, clear local state
+    }
     setUser(null);
-    setToken(null);
     setError(null);
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
   };
 
@@ -117,9 +144,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value: AuthContextType = {
     user,
-    token,
     isLoading,
-    isAuthenticated: !!user && !!token,
+    isAuthenticated: !!user,
     error,
     login,
     register,

@@ -1,6 +1,8 @@
 import { validationResult, body } from 'express-validator';
+import mongoose from 'mongoose';
 import LeaveRequest from '../models/LeaveRequest.js';
 import User from '../models/User.js';
+import { countDays } from '../utils/hoursCalc.js';
 
 // ───── Validation rules ─────
 export const submitValidation = [
@@ -37,6 +39,46 @@ export const submitLeave = async (req, res, next) => {
                 success: false,
                 error: { code: 'VALIDATION_ERROR', message: 'End date must be after start date' },
             });
+        }
+
+        // Calculate days needed
+        const daysNeeded = countDays(start, end);
+
+        // Check leave balance before creating request
+        const balanceKey = {
+            'Annual Leave': 'annualLeave',
+            'Sick Leave': 'sickLeave',
+            'Casual Leave': 'casualLeave',
+            Holiday: null, // Holidays don't require balance
+        }[leaveType];
+
+        if (balanceKey) {
+            const user = await User.findById(req.user._id);
+            if (user) {
+                const availableBalance = user.leaveBalance[balanceKey] || 0;
+
+                // Check pending leaves that would use this balance
+                const pendingLeaves = await LeaveRequest.find({
+                    userId: req.user._id,
+                    leaveType,
+                    status: 'pending',
+                });
+
+                let pendingDays = 0;
+                for (const leave of pendingLeaves) {
+                    pendingDays += countDays(new Date(leave.startDate), new Date(leave.endDate));
+                }
+
+                if (availableBalance - pendingDays < daysNeeded) {
+                    return res.status(400).json({
+                        success: false,
+                        error: {
+                            code: 'INSUFFICIENT_BALANCE',
+                            message: `Insufficient ${leaveType} balance. Available: ${availableBalance - pendingDays}, Requested: ${daysNeeded}`,
+                        },
+                    });
+                }
+            }
         }
 
         const leave = await LeaveRequest.create({
@@ -138,17 +180,24 @@ export const getLeaveById = async (req, res, next) => {
 
 // ─────── PATCH /api/leave-requests/:id/review  (Manager only) ───────
 export const reviewLeave = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).json({
                 success: false,
                 error: { code: 'VALIDATION_ERROR', message: 'Validation failed', details: errors.array() },
             });
         }
 
-        const leave = await LeaveRequest.findById(req.params.id);
+        const leave = await LeaveRequest.findById(req.params.id).session(session);
         if (!leave) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({
                 success: false,
                 error: { code: 'NOT_FOUND', message: 'Leave request not found' },
@@ -156,10 +205,37 @@ export const reviewLeave = async (req, res, next) => {
         }
 
         if (leave.status !== 'pending') {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).json({
                 success: false,
                 error: { code: 'VALIDATION_ERROR', message: `Leave request already ${leave.status}` },
             });
+        }
+
+        // Authorization: Managers can only review leaves from their department
+        // Admins can review any leave
+        const requestingUser = await User.findById(req.user._id).session(session);
+        const leaveUser = await User.findById(leave.userId).session(session);
+
+        if (!requestingUser || !leaveUser) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'User not found' },
+            });
+        }
+
+        if (requestingUser.role === 'manager') {
+            if (requestingUser.department !== leaveUser.department) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(403).json({
+                    success: false,
+                    error: { code: 'FORBIDDEN', message: 'You can only review leave requests from your department' },
+                });
+            }
         }
 
         const { status, reviewNote } = req.body;
@@ -169,32 +245,31 @@ export const reviewLeave = async (req, res, next) => {
         leave.reviewedBy = req.user._id;
         if (reviewNote) leave.reviewNote = reviewNote;
 
-        // If approved, deduct leave balance
+        // If approved, deduct leave balance atomically
         if (status === 'approved') {
-            const user = await User.findById(leave.userId);
-            if (user) {
-                const days = Math.max(
-                    1,
-                    Math.round((new Date(leave.endDate) - new Date(leave.startDate)) / (1000 * 60 * 60 * 24)) + 1
-                );
-                const balanceKey = {
-                    'Annual Leave': 'annualLeave',
-                    'Sick Leave': 'sickLeave',
-                    'Casual Leave': 'casualLeave',
-                    Holiday: null, // Holidays don't deduct balance
-                }[leave.leaveType];
+            const balanceKey = {
+                'Annual Leave': 'annualLeave',
+                'Sick Leave': 'sickLeave',
+                'Casual Leave': 'casualLeave',
+                Holiday: null, // Holidays don't deduct balance
+            }[leave.leaveType];
 
-                if (balanceKey && user.leaveBalance[balanceKey] != null) {
-                    user.leaveBalance[balanceKey] = Math.max(0, user.leaveBalance[balanceKey] - days);
-                    await user.save();
-                }
+            if (balanceKey && leaveUser.leaveBalance[balanceKey] != null) {
+                const days = countDays(new Date(leave.startDate), new Date(leave.endDate));
+                leaveUser.leaveBalance[balanceKey] = Math.max(0, leaveUser.leaveBalance[balanceKey] - days);
+                await leaveUser.save({ session });
             }
         }
 
-        await leave.save();
+        await leave.save({ session });
+
+        await session.commitTransaction();
+        session.endSession();
 
         res.json({ success: true, data: leave });
     } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
         next(error);
     }
 };

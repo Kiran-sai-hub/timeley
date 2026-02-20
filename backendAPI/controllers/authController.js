@@ -9,12 +9,29 @@ const signToken = (user) => {
     });
 };
 
+// Helper — set JWT as httpOnly cookie
+const setCookieToken = (res, token) => {
+    res.cookie('timely_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+};
+
 // ───── Validation rules (exported for routes) ─────
 export const registerValidation = [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('role').optional().isIn(['employee', 'manager', 'admin']).withMessage('Invalid role'),
+    body('password')
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters')
+        .matches(/[A-Z]/)
+        .withMessage('Password must contain at least one uppercase letter')
+        .matches(/[a-z]/)
+        .withMessage('Password must contain at least one lowercase letter')
+        .matches(/[0-9]/)
+        .withMessage('Password must contain at least one number'),
     body('department').optional().trim(),
 ];
 
@@ -34,7 +51,11 @@ export const register = async (req, res, next) => {
             });
         }
 
-        const { name, email, password, role, department } = req.body;
+        const { name, email, password, department } = req.body;
+
+        // Security: Always default to 'employee' role for public registration
+        // Role can only be changed by admin users through admin routes
+        const role = 'employee';
 
         // Check duplicate
         const existing = await User.findOne({ email });
@@ -54,6 +75,7 @@ export const register = async (req, res, next) => {
 
         const user = await User.create({ name, email, password, role, department, managerId });
         const token = signToken(user);
+        setCookieToken(res, token);
 
         res.status(201).json({
             success: true,
@@ -102,6 +124,7 @@ export const login = async (req, res, next) => {
         }
 
         const token = signToken(user);
+        setCookieToken(res, token);
 
         res.json({
             success: true,
@@ -118,4 +141,28 @@ export const getMe = async (req, res) => {
         success: true,
         data: { user: req.user },
     });
+};
+
+// ─────── POST /api/auth/refresh ───────
+export const refreshToken = async (req, res) => {
+    // req.user is already verified by auth middleware
+    const token = signToken(req.user);
+    setCookieToken(res, token);
+
+    res.json({
+        success: true,
+        data: { token, user: req.user },
+    });
+};
+
+// ─────── POST /api/auth/logout ───────
+export const logoutUser = async (_req, res) => {
+    res.cookie('timely_token', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0, // Expire immediately
+    });
+
+    res.json({ success: true, message: 'Logged out successfully' });
 };

@@ -9,6 +9,35 @@ export const isWeekend = (date) => {
 };
 
 // ──────────────────────────────────────────────
+//  DST-safe day counting between two dates (inclusive)
+//  Uses noon to avoid DST boundary issues
+// ──────────────────────────────────────────────
+export const countDays = (startDate, endDate) => {
+    let count = 0;
+    const d = new Date(startDate);
+    d.setHours(12, 0, 0, 0);
+    const e = new Date(endDate);
+    e.setHours(12, 0, 0, 0);
+    while (d <= e) {
+        count++;
+        d.setDate(d.getDate() + 1);
+    }
+    return Math.max(1, count);
+};
+
+// Count days in a date range that fall within a specific month (inclusive)
+export const countDaysInMonth = (startDate, endDate, year, month) => {
+    const monthStart = new Date(year, month, 1, 12, 0, 0, 0);
+    const monthEnd = new Date(year, month + 1, 0, 12, 0, 0, 0);
+    const effectiveStart = new Date(Math.max(new Date(startDate).getTime(), monthStart.getTime()));
+    const effectiveEnd = new Date(Math.min(new Date(endDate).getTime(), monthEnd.getTime()));
+    effectiveStart.setHours(12, 0, 0, 0);
+    effectiveEnd.setHours(12, 0, 0, 0);
+    if (effectiveStart > effectiveEnd) return 0;
+    return countDays(effectiveStart, effectiveEnd);
+};
+
+// ──────────────────────────────────────────────
 //  Get all time entries for a user in a date range
 // ──────────────────────────────────────────────
 export const getEntriesInRange = async (userId, startDate, endDate) => {
@@ -185,9 +214,7 @@ export const calculateLeaveHours = (leaves) => {
     leaves
         .filter((l) => l.status === 'approved')
         .forEach((leave) => {
-            const start = new Date(leave.startDate);
-            const end = new Date(leave.endDate);
-            const days = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1);
+            const days = countDays(new Date(leave.startDate), new Date(leave.endDate));
             result[leave.leaveType] += days * 8; // 8h per leave day
         });
 
@@ -203,11 +230,26 @@ export const getHoursBreakdown = (entries, leaves, year, month) => {
 
     const { regularHours, overtimeHours, totalHours } = calculateAggregatedHours(entries, monthStart, monthEnd);
 
+    // Filter leaves that overlap with this month (not just those starting in it)
     const monthLeaves = leaves.filter((l) => {
         const start = new Date(l.startDate);
-        return start.getFullYear() === year && start.getMonth() === month;
+        const end = new Date(l.endDate);
+        return start <= monthEnd && end >= monthStart;
     });
-    const leaveHours = calculateLeaveHours(monthLeaves);
+
+    // Calculate leave hours only for days within this month
+    const leaveHours = {
+        'Annual Leave': 0,
+        'Sick Leave': 0,
+        'Casual Leave': 0,
+        Holiday: 0,
+    };
+    monthLeaves
+        .filter((l) => l.status === 'approved')
+        .forEach((leave) => {
+            const days = countDaysInMonth(new Date(leave.startDate), new Date(leave.endDate), year, month);
+            leaveHours[leave.leaveType] += days * 8;
+        });
 
     return {
         regularHours: Math.round(regularHours * 100) / 100,

@@ -183,7 +183,7 @@ export const TimeTracker = () => {
                 >
                   {user?.role === 'admin' && <ShieldCheck className="w-3 h-3 mr-1" />}
                   {user?.role === 'manager' && <Users className="w-3 h-3 mr-1" />}
-                  {user?.role?.charAt(0).toUpperCase()}{user?.role?.slice(1)}
+                  {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Employee'}
                 </Badge>
               </div>
               <Button variant="outline" size="sm" onClick={handleLogout}>

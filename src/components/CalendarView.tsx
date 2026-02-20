@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,23 +69,25 @@ export const CalendarView = ({ entries, leaves, onRefresh }: CalendarViewProps) 
 
   // Fetch working days and stats from API
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchCalendarData = async () => {
       setIsLoading(true);
       try {
         // Fetch working days for the month
-        const wdRes = await timeEntriesApi.getWorkingDays(currentYear, currentMonth);
+        const wdRes = await timeEntriesApi.getWorkingDays(currentYear, currentMonth, controller.signal);
         if (wdRes.success) {
           setWorkingDays(wdRes.data.map(toLocalWorkingDay));
         }
 
         // Fetch weekly stats
-        const wsRes = await timeEntriesApi.getWeeklyStats(weekStartStr);
+        const wsRes = await timeEntriesApi.getWeeklyStats(weekStartStr, controller.signal);
         if (wsRes.success) {
           setWeeklyStats(wsRes.data);
         }
 
         // Fetch leaves for the month
-        const leaveRes = await leaveRequestsApi.getLeavesForMonth(currentYear, currentMonth);
+        const leaveRes = await leaveRequestsApi.getLeavesForMonth(currentYear, currentMonth, controller.signal);
         if (leaveRes.success) {
           const map = new Map<string, LeaveStatus>();
           Object.entries(leaveRes.data.dateMap).forEach(([date, status]) => {
@@ -94,13 +96,23 @@ export const CalendarView = ({ entries, leaves, onRefresh }: CalendarViewProps) 
           setLeaveDateMap(map);
         }
       } catch (error) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
         console.error('Failed to fetch calendar data:', error);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchCalendarData();
+
+    return () => {
+      controller.abort();
+    };
   }, [currentYear, currentMonth, weekStartStr, entries]);
 
   const getDateStatus = (date: Date): WorkingDay | undefined => {

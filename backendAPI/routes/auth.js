@@ -6,6 +6,8 @@ import {
     login,
     loginValidation,
     getMe,
+    refreshToken,
+    logoutUser,
 } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -14,7 +16,9 @@ const router = express.Router();
 router.post('/register', registerValidation, register);
 router.post('/login', loginValidation, login);
 
-// Protected route
+// Protected routes
 router.get('/me', auth, getMe);
+router.post('/refresh', auth, refreshToken);
+router.post('/logout', auth, logoutUser);
 
 export default router;

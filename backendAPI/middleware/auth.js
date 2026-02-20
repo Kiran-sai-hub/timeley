@@ -8,15 +8,22 @@ import User from '../models/User.js';
  */
 const auth = async (req, res, next) => {
     try {
-        const header = req.headers.authorization;
-        if (!header || !header.startsWith('Bearer ')) {
+        // Read token from httpOnly cookie first, fallback to Authorization header
+        let token = req.cookies?.timely_token;
+
+        if (!token) {
+            const header = req.headers.authorization;
+            if (header && header.startsWith('Bearer ')) {
+                token = header.split(' ')[1];
+            }
+        }
+
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 error: { code: 'UNAUTHORIZED', message: 'No token provided' },
             });
         }
-
-        const token = header.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         const user = await User.findById(decoded.id);
