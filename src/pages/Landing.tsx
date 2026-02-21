@@ -3,8 +3,7 @@ import { Clock, Shield, BarChart3, Users, ArrowRight, CheckCircle2 } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
-import dashboardPreview from '@/assets/dashboard-preview.png';
-
+import { MiniDashboard } from '@/components/MiniDashboard';
 const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -36,7 +35,7 @@ const Landing = () => {
         <div className="flex flex-col overflow-hidden">
           <ContainerScroll
             titleComponent={
-            <div className="text-center">
+              <div className="text-center">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight max-w-3xl mx-auto font-sans">
                   Track time. <br className="hidden sm:block" />
                   <span className="text-primary">Manage leaves.</span> <br className="hidden sm:block" />
@@ -50,11 +49,7 @@ const Landing = () => {
               </div>
             }>
 
-            <img
-              src={dashboardPreview}
-              alt="Timely dashboard preview showing calendar, punch clock, and weekly stats"
-              className="mx-auto rounded-2xl object-cover h-full w-full object-left-top"
-              draggable={false} />
+            <MiniDashboard />
 
           </ContainerScroll>
         </div>
@@ -64,16 +59,16 @@ const Landing = () => {
       <section className="border-y border-border bg-card/50">
         <div className="max-w-5xl mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-          { value: '99.9%', label: 'Uptime' },
-          { value: '10k+', label: 'Active Users' },
-          { value: '2M+', label: 'Hours Tracked' },
-          { value: '4.9★', label: 'User Rating' }].
-          map((stat) =>
-          <div key={stat.label}>
-              <div className="text-3xl font-bold text-primary font-mono">{stat.value}</div>
-              <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
-            </div>
-          )}
+            { value: '99.9%', label: 'Uptime' },
+            { value: '10k+', label: 'Active Users' },
+            { value: '2M+', label: 'Hours Tracked' },
+            { value: '4.9★', label: 'User Rating' }].
+            map((stat) =>
+              <div key={stat.label}>
+                <div className="text-3xl font-bold text-primary font-mono">{stat.value}</div>
+                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
+              </div>
+            )}
         </div>
       </section>
 
@@ -85,21 +80,21 @@ const Landing = () => {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-          { icon: Clock, title: 'Punch Clock', desc: 'One-tap punch in / out with real-time status tracking.' },
-          { icon: BarChart3, title: 'Hours Analytics', desc: 'Daily, weekly, monthly, and yearly hour breakdowns.' },
-          { icon: Shield, title: 'Leave Management', desc: 'Submit requests, track balances, get manager approvals.' },
-          { icon: Users, title: 'Team Overview', desc: 'Managers see who\'s in, who\'s out, and pending requests.' }].
-          map((feature) =>
-          <Card key={feature.title} className="bg-card border-border hover:shadow-lg transition-shadow">
-              <CardContent className="pt-6">
-                <div className="h-12 w-12 rounded-lg bg-accent flex items-center justify-center mb-4">
-                  <feature.icon className="h-6 w-6 text-accent-foreground" />
-                </div>
-                <h3 className="font-semibold text-foreground text-lg">{feature.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
-              </CardContent>
-            </Card>
-          )}
+            { icon: Clock, title: 'Punch Clock', desc: 'One-tap punch in / out with real-time status tracking.' },
+            { icon: BarChart3, title: 'Hours Analytics', desc: 'Daily, weekly, monthly, and yearly hour breakdowns.' },
+            { icon: Shield, title: 'Leave Management', desc: 'Submit requests, track balances, get manager approvals.' },
+            { icon: Users, title: 'Team Overview', desc: 'Managers see who\'s in, who\'s out, and pending requests.' }].
+            map((feature) =>
+              <Card key={feature.title} className="bg-card border-border hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="h-12 w-12 rounded-lg bg-accent flex items-center justify-center mb-4">
+                    <feature.icon className="h-6 w-6 text-accent-foreground" />
+                  </div>
+                  <h3 className="font-semibold text-foreground text-lg">{feature.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
+                </CardContent>
+              </Card>
+            )}
         </div>
       </section>
 
