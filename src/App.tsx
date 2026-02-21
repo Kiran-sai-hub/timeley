@@ -7,6 +7,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
+import Features from "./pages/Features";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 import { Component, ReactNode } from 'react';
 
@@ -59,6 +62,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/features" element={<Features />} />
+      <Route path="/pricing" element={<Pricing />} />
       <Route
         path="/login"
         element={
@@ -68,7 +74,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Index />
