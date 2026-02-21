@@ -36,7 +36,7 @@ const Landing = () => {
         <div className="flex flex-col overflow-hidden">
           <ContainerScroll
             titleComponent={
-              <div className="text-center">
+            <div className="text-center">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight max-w-3xl mx-auto font-sans">
                   Track time. <br className="hidden sm:block" />
                   <span className="text-primary">Manage leave.</span> <br className="hidden sm:block" />
@@ -52,20 +52,20 @@ const Landing = () => {
                     </Button>
                   </Link>
                   <Link to="/features">
-                    <Button variant="outline" size="lg" className="text-base px-8">
-                      See Features
-                    </Button>
+                    
+
+
                   </Link>
                 </div>
               </div>
-            }
-          >
+            }>
+
             <img
               src={dashboardPreview}
               alt="Timely dashboard preview showing calendar, punch clock, and weekly stats"
               className="mx-auto rounded-2xl object-cover h-full w-full object-left-top"
-              draggable={false}
-            />
+              draggable={false} />
+
           </ContainerScroll>
         </div>
       </section>
