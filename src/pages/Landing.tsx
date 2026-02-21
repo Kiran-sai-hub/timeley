@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { Clock, Shield, BarChart3, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ContainerScroll } from '@/components/ui/container-scroll-animation';
+import dashboardPreview from '@/assets/dashboard-preview.png';
 
 const Landing = () => {
   return (
@@ -31,30 +33,40 @@ const Landing = () => {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/30 pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20 text-center relative">
-          
-
-
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight max-w-3xl mx-auto font-sans">
-            Track time. <br className="hidden sm:block" />
-            <span className="text-primary">Manage leave.</span> <br className="hidden sm:block" />
-            Stay in control.
-          </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Timely helps teams punch in, track hours, request leave, and get manager approvals — all in one clean dashboard.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/login">
-              <Button size="lg" className="text-base px-8">
-                Start Tracking <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link to="/features">
-              <Button variant="outline" size="lg" className="text-base px-8">
-                See Features
-              </Button>
-            </Link>
-          </div>
+        <div className="flex flex-col overflow-hidden">
+          <ContainerScroll
+            titleComponent={
+              <div className="text-center">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight max-w-3xl mx-auto font-sans">
+                  Track time. <br className="hidden sm:block" />
+                  <span className="text-primary">Manage leave.</span> <br className="hidden sm:block" />
+                  Stay in control.
+                </h1>
+                <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                  Timely helps teams punch in, track hours, request leave, and get manager approvals — all in one clean dashboard.
+                </p>
+                <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Link to="/login">
+                    <Button size="lg" className="text-base px-8">
+                      Start Tracking <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <Link to="/features">
+                    <Button variant="outline" size="lg" className="text-base px-8">
+                      See Features
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            }
+          >
+            <img
+              src={dashboardPreview}
+              alt="Timely dashboard preview showing calendar, punch clock, and weekly stats"
+              className="mx-auto rounded-2xl object-cover h-full w-full object-left-top"
+              draggable={false}
+            />
+          </ContainerScroll>
         </div>
       </section>
 
