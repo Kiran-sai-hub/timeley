@@ -11,7 +11,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             <Clock className="h-7 w-7 text-primary" />
-            <span className="text-xl font-bold font-sans text-foreground tracking-tight">Timely</span>
+            <span className="text-xl font-bold font-sans text-foreground tracking-tight">Timeley</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
             <Link to="/features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</Link>
@@ -37,11 +37,11 @@ const Landing = () => {
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight max-w-3xl mx-auto font-sans">
             Track time. <br className="hidden sm:block" />
-            <span className="text-primary">Manage leave.</span> <br className="hidden sm:block" />
+            <span className="text-primary">Manage leaves.</span> <br className="hidden sm:block" />
             Stay in control.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Timely helps teams punch in, track hours, request leave, and get manager approvals — all in one clean dashboard.
+            Timeley helps teams punch in, track hours, request leave, and get manager approvals, all in one clean dashboard.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/login">
@@ -105,7 +105,7 @@ const Landing = () => {
       <section className="bg-primary/5 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 py-20 text-center">
           <h2 className="text-3xl font-bold text-foreground font-sans">Ready to get started?</h2>
-          <p className="mt-3 text-muted-foreground">Join thousands of teams already using Timely to track their time.</p>
+          <p className="mt-3 text-muted-foreground">Join thousands of teams already using Timeley to track their time.</p>
           <Link to="/login">
             <Button size="lg" className="mt-8 text-base px-10">
               Create Your Account <ArrowRight className="ml-2 h-5 w-5" />
@@ -119,14 +119,14 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-foreground">Timely</span>
+            <span className="font-semibold text-foreground">Timeley</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="/features" className="hover:text-foreground transition-colors">Features</Link>
             <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
           </div>
-          <p className="text-xs text-muted-foreground">© 2026 Timely. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">© 2026 Timeley. All rights reserved.</p>
         </div>
       </footer>
     </div>

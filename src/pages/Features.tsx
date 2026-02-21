@@ -17,7 +17,7 @@ const features = [
   {
     icon: CalendarDays,
     title: 'Interactive Calendar',
-    desc: 'Color-coded calendar view showing working days, partial days, absences, and leave — with a detail panel for each day.',
+    desc: 'Color-coded calendar view showing working days, partial days, absences, and leave, all with a detail panel for each day.',
   },
   {
     icon: Shield,
@@ -54,7 +54,7 @@ const Features = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <Clock className="h-7 w-7 text-primary" />
-            <span className="text-xl font-bold font-sans text-foreground tracking-tight">Timely</span>
+            <span className="text-xl font-bold font-sans text-foreground tracking-tight">Timeley</span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link to="/features" className="text-sm font-medium text-foreground transition-colors">Features</Link>
@@ -75,7 +75,7 @@ const Features = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 text-center">
         <h1 className="text-4xl sm:text-5xl font-bold text-foreground font-sans">What We Offer</h1>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-          Everything your team needs to track time, manage leave, and stay organized — built into one seamless platform.
+          Everything your team needs to track time, manage leaves, and stay organized, all in one place, built into one seamless platform.
         </p>
       </section>
 
@@ -99,13 +99,13 @@ const Features = () => {
       {/* Why Timely */}
       <section className="bg-card/50 border-y border-border">
         <div className="max-w-4xl mx-auto px-4 py-20">
-          <h2 className="text-3xl font-bold text-foreground text-center font-sans mb-12">Why teams choose Timely</h2>
+          <h2 className="text-3xl font-bold text-foreground text-center font-sans mb-12">Why teams choose Timeley</h2>
           <div className="grid sm:grid-cols-2 gap-6">
             {[
-              'No complex setup — works out of the box',
+              'No complex setup, just works out of the box',
               'Role-based access for employees & managers',
               'Real-time sync across all devices',
-              'Privacy-first — your data stays yours',
+              'Privacy-first, your data is your\'s only',
               'Beautiful calendar with day-by-day detail',
               'Overtime calculated automatically',
             ].map((item) => (
@@ -134,14 +134,14 @@ const Features = () => {
         <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-foreground">Timely</span>
+            <span className="font-semibold text-foreground">Timeley</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="/features" className="hover:text-foreground transition-colors">Features</Link>
             <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
           </div>
-          <p className="text-xs text-muted-foreground">© 2026 Timely. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">© 2026 Timeley. All rights reserved.</p>
         </div>
       </footer>
     </div>
