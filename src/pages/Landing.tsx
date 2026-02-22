@@ -1,34 +1,16 @@
 import { Link } from 'react-router-dom';
-import { Clock, Shield, BarChart3, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Clock, Shield, BarChart3, Users, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 import { MiniDashboard } from '@/components/MiniDashboard';
 import DisplayCards from '@/components/ui/display-cards';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+
 const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <Clock className="h-7 w-7 text-primary" />
-            <span className="text-xl font-bold font-sans text-foreground tracking-tight">Timeley</span>
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</Link>
-            <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">Log in</Button>
-            </Link>
-            <Link to="/login">
-              <Button size="sm">Get Started <ArrowRight className="ml-1 h-4 w-4" /></Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar activePage="home" />
 
       {/* Hero */}
       <section className="relative overflow-hidden">
@@ -48,28 +30,10 @@ const Landing = () => {
                 <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 </div>
               </div>
-            }>
-
+            }
+          >
             <MiniDashboard />
-
           </ContainerScroll>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="border-y border-border bg-card/50">
-        <div className="max-w-5xl mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {[
-            { value: '99.9%', label: 'Uptime' },
-            { value: '10k+', label: 'Active Users' },
-            { value: '2M+', label: 'Hours Tracked' },
-            { value: '4.9★', label: 'User Rating' }].
-            map((stat) =>
-              <div key={stat.label}>
-                <div className="text-3xl font-bold text-primary font-mono">{stat.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
-              </div>
-            )}
         </div>
       </section>
 
@@ -77,12 +41,14 @@ const Landing = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 overflow-hidden">
         <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-8">
           <div className="flex-1 space-y-6 text-center lg:text-left">
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground font-sans leading-tight">Everything you need <br /><span className="text-primary">in one place</span></h2>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground font-sans leading-tight">
+              Everything you need <br /><span className="text-primary">in one place</span>
+            </h2>
             <p className="text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              Simple tools that keep your workforce organized and accountable. Bring your entire team together with our intuitive, feature-rich platform.
+              Simple tools that keep your workforce organized and accountable. Punch clock, leave management, analytics, and a manager dashboard, all built in.
             </p>
             <div className="pt-4 flex justify-center lg:justify-start">
-              <Link to="/features">
+              <Link to="/products">
                 <Button variant="outline" size="lg" className="rounded-full px-8">
                   View all features
                 </Button>
@@ -141,7 +107,9 @@ const Landing = () => {
       <section className="bg-primary/5 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 py-20 text-center">
           <h2 className="text-3xl font-bold text-foreground font-sans">Ready to get started?</h2>
-          <p className="mt-3 text-muted-foreground">Join thousands of teams already using Timeley to track their time.</p>
+          <p className="mt-3 text-muted-foreground">
+            Create a free account and give your team a better way to track time and manage leave.
+          </p>
           <Link to="/login">
             <Button size="lg" className="mt-8 text-base px-10">
               Create Your Account <ArrowRight className="ml-2 h-5 w-5" />
@@ -150,23 +118,9 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-foreground">Timeley</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/features" className="hover:text-foreground transition-colors">Features</Link>
-            <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
-            <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
-          </div>
-          <p className="text-xs text-muted-foreground">© 2026 Timeley. All rights reserved.</p>
-        </div>
-      </footer>
-    </div>);
-
+      <Footer />
+    </div>
+  );
 };
 
 export default Landing;

@@ -8,8 +8,15 @@ import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
-import Features from "./pages/Features";
+import Products from "./pages/Products";
 import Pricing from "./pages/Pricing";
+import Contact from "./pages/Contact";
+import Startups from "./pages/solutions/Startups";
+import GrowingTeams from "./pages/solutions/GrowingTeams";
+import RemoteTeams from "./pages/solutions/RemoteTeams";
+import Enterprise from "./pages/solutions/Enterprise";
+import HRDepartments from "./pages/solutions/HRDepartments";
+import FieldWorkers from "./pages/solutions/FieldWorkers";
 import NotFound from "./pages/NotFound";
 import { Component, ReactNode } from 'react';
 
@@ -63,8 +70,15 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/features" element={<Features />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/solutions/startups" element={<Startups />} />
+      <Route path="/solutions/growing-teams" element={<GrowingTeams />} />
+      <Route path="/solutions/remote-teams" element={<RemoteTeams />} />
+      <Route path="/solutions/enterprise" element={<Enterprise />} />
+      <Route path="/solutions/hr-departments" element={<HRDepartments />} />
+      <Route path="/solutions/field-workers" element={<FieldWorkers />} />
       <Route path="/pricing" element={<Pricing />} />
+      <Route path="/contact" element={<Contact />} />
       <Route
         path="/login"
         element={

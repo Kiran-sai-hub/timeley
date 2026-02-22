@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Clock, ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 
 const plans = [
   {
@@ -64,27 +66,7 @@ const faqs = [
 const Pricing = () => {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <Clock className="h-7 w-7 text-primary" />
-            <span className="text-xl font-bold font-sans text-foreground tracking-tight">Timeley</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</Link>
-            <Link to="/pricing" className="text-sm font-medium text-foreground transition-colors">Pricing</Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">Log in</Button>
-            </Link>
-            <Link to="/login">
-              <Button size="sm">Get Started</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar activePage="pricing" />
 
       {/* Pricing Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 text-center">
@@ -100,9 +82,8 @@ const Pricing = () => {
           {plans.map((plan) => (
             <Card
               key={plan.name}
-              className={`border-border relative flex flex-col ${
-                plan.highlight ? 'border-primary ring-2 ring-primary/20 shadow-lg' : 'bg-card'
-              }`}
+              className={`border-border relative flex flex-col ${plan.highlight ? 'border-primary ring-2 ring-primary/20 shadow-lg' : 'bg-card'
+                }`}
             >
               {plan.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
@@ -155,21 +136,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-foreground">Timeley</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/features" className="hover:text-foreground transition-colors">Features</Link>
-            <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
-            <Link to="/login" className="hover:text-foreground transition-colors">Login</Link>
-          </div>
-          <p className="text-xs text-muted-foreground">© 2026 Timeley. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

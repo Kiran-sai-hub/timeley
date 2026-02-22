@@ -545,7 +545,7 @@ app.use('/api/departments', departmentRoutes);
 │                            │
 │  ─── or ───                │
 │                            │
-│  [🏢 Onboard Your Org]     │
+│  [Onboard Your Org]        │
 └────────────────────────────┘
 ```
 
@@ -590,7 +590,7 @@ app.use('/api/departments', departmentRoutes);
 **Step 3: Success — You're In!**
 ```
 ┌────────────────────────────┐
-│  Step 3 of 3: All Set! 🎉  │
+│  Step 3 of 3: All Set!     │
 │                            │
 │  Acme Corp is ready!       │
 │  You are the org owner.    │
@@ -702,14 +702,14 @@ export interface User {
 **Layout:**
 ```
 ┌─────────────────────────────────────────────┐
-│  Sidebar              │  Main Content        │
-│                       │                      │
-│  📊 Overview          │  [Dynamic content    │
-│  🏢 Departments       │   based on selected  │
-│  👥 Users             │   sidebar item]      │
-│  ⚙️ Settings          │                      │
-│                       │                      │
-│  ← Back to App        │                      │
+│  Sidebar              │  Main Content       │
+│                       │                     │
+│  Overview             │  [Dynamic content   │
+│  Departments          │   based on selected │
+│  Users                │   sidebar item]     │
+│  Settings             │                     │
+│                       │                     │
+│  ← Back to App        │                     │
 └─────────────────────────────────────────────┘
 ```
 
