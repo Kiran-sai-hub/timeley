@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 import { MiniDashboard } from '@/components/MiniDashboard';
+import DisplayCards from '@/components/ui/display-cards';
 const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -73,28 +74,66 @@ const Landing = () => {
       </section>
 
       {/* Feature Highlights */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-foreground font-sans">Everything you need</h2>
-          <p className="mt-3 text-muted-foreground max-w-lg mx-auto">Simple tools that keep your workforce organized and accountable.</p>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { icon: Clock, title: 'Punch Clock', desc: 'One-tap punch in / out with real-time status tracking.' },
-            { icon: BarChart3, title: 'Hours Analytics', desc: 'Daily, weekly, monthly, and yearly hour breakdowns.' },
-            { icon: Shield, title: 'Leave Management', desc: 'Submit requests, track balances, get manager approvals.' },
-            { icon: Users, title: 'Team Overview', desc: 'Managers see who\'s in, who\'s out, and pending requests.' }].
-            map((feature) =>
-              <Card key={feature.title} className="bg-card border-border hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="h-12 w-12 rounded-lg bg-accent flex items-center justify-center mb-4">
-                    <feature.icon className="h-6 w-6 text-accent-foreground" />
-                  </div>
-                  <h3 className="font-semibold text-foreground text-lg">{feature.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
-                </CardContent>
-              </Card>
-            )}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 overflow-hidden">
+        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-8">
+          <div className="flex-1 space-y-6 text-center lg:text-left">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground font-sans leading-tight">Everything you need <br /><span className="text-primary">in one place</span></h2>
+            <p className="text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              Simple tools that keep your workforce organized and accountable. Bring your entire team together with our intuitive, feature-rich platform.
+            </p>
+            <div className="pt-4 flex justify-center lg:justify-start">
+              <Link to="/features">
+                <Button variant="outline" size="lg" className="rounded-full px-8">
+                  View all features
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex-1 flex justify-center items-center min-h-[400px] w-full -translate-x-6 -translate-y-6">
+            <DisplayCards cards={[
+              {
+                icon: <Clock className="size-4 text-blue-300" />,
+                title: "Punch Clock",
+                description: "One-tap punch in / out",
+                date: "Real-time status tracking",
+                iconClassName: "text-blue-500",
+                titleClassName: "text-blue-500",
+                className:
+                  "z-10 [grid-area:stack] hover:-translate-x-44 hover:-translate-y-4 hover:z-50 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0 before:bg-[url(https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1000)] before:bg-cover",
+              },
+              {
+                icon: <BarChart3 className="size-4 text-emerald-300" />,
+                title: "Hours Analytics",
+                description: "Detailed hour breakdowns",
+                date: "Daily, Weekly, Monthly",
+                iconClassName: "text-emerald-500",
+                titleClassName: "text-emerald-500",
+                className:
+                  "z-20 [grid-area:stack] translate-x-8 translate-y-8 hover:-translate-x-36 hover:-translate-y-4 hover:z-50 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0 before:bg-[url(https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000)] before:bg-cover",
+              },
+              {
+                icon: <Shield className="size-4 text-purple-300" />,
+                title: "Leave Management",
+                description: "Submit & track requests",
+                date: "Quick manager approvals",
+                iconClassName: "text-purple-500",
+                titleClassName: "text-purple-500",
+                className:
+                  "z-30 [grid-area:stack] translate-x-16 translate-y-16 hover:-translate-x-28 hover:-translate-y-4 hover:z-50 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0 before:bg-[url(https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000)] before:bg-cover",
+              },
+              {
+                icon: <Users className="size-4 text-amber-300" />,
+                title: "Team Overview",
+                description: "See who's in and out",
+                date: "Always updated view",
+                iconClassName: "text-amber-500",
+                titleClassName: "text-amber-500",
+                className:
+                  "z-40 [grid-area:stack] translate-x-24 translate-y-24 hover:-translate-x-20 hover:-translate-y-4 hover:z-50 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0 before:bg-[url(https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000)] before:bg-cover",
+              },
+            ]} />
+          </div>
         </div>
       </section>
 
