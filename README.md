@@ -4,7 +4,7 @@ Timeley is a modern, full-stack application designed to streamline employee time
 
 ## Interesting Fact
 
-A version of the very same app here maybe one or two changes is being used actively by 30+ employees in production of a Small agency for thier time & leave tracking.
+A version of the very same app here maybe one or two changes is being used actively by 30+ employees in production of a Small agency for their time & leave tracking.
 
 ## Features
 
