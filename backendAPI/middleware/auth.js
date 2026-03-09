@@ -1,14 +1,9 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-/**
- * JWT authentication middleware.
- * Expects header:  Authorization: Bearer <token>
- * On success, attaches the full user document to req.user (without password).
- */
 const auth = async (req, res, next) => {
     try {
-        // Read token from httpOnly cookie first, fallback to Authorization header
+
         let token = req.cookies?.timely_token;
 
         if (!token) {

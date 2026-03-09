@@ -12,11 +12,9 @@ import {
 
 const router = express.Router();
 
-// Public routes
 router.post('/register', registerValidation, register);
 router.post('/login', loginValidation, login);
 
-// Protected routes
 router.get('/me', auth, getMe);
 router.post('/refresh', auth, refreshToken);
 router.post('/logout', auth, logoutUser);

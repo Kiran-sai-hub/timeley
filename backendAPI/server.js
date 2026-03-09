@@ -8,10 +8,9 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
 
-// Simple in-memory rate limiter middleware
 const rateLimitStore = new Map();
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX = 100; // max requests per window
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; 
+const RATE_LIMIT_MAX = 100;
 
 const rateLimitMiddleware = (req, res, next) => {
     const ip = req.ip || req.connection.remoteAddress;
@@ -41,10 +40,9 @@ const rateLimitMiddleware = (req, res, next) => {
     next();
 };
 
-// More strict rate limit for auth endpoints
 const authRateLimitStore = new Map();
-const AUTH_RATE_LIMIT_MAX = 5; // 5 attempts
-const AUTH_RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const AUTH_RATE_LIMIT_MAX = 5; 
+const AUTH_RATE_LIMIT_WINDOW = 15 * 60 * 1000;
 
 const authRateLimitMiddleware = (req, res, next) => {
     const ip = req.ip || req.connection.remoteAddress;

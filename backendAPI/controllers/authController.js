@@ -2,24 +2,21 @@ import jwt from 'jsonwebtoken';
 import { validationResult, body } from 'express-validator';
 import User from '../models/User.js';
 
-// Helper — sign a JWT for a user
 const signToken = (user) => {
     return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
 };
 
-// Helper — set JWT as httpOnly cookie
 const setCookieToken = (res, token) => {
     res.cookie('timely_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 };
 
-// ───── Validation rules (exported for routes) ─────
 export const registerValidation = [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
@@ -40,7 +37,6 @@ export const loginValidation = [
     body('password').notEmpty().withMessage('Password is required'),
 ];
 
-// ─────── POST /api/auth/register ───────
 export const register = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -53,11 +49,8 @@ export const register = async (req, res, next) => {
 
         const { name, email, password, department } = req.body;
 
-        // Security: Always default to 'employee' role for public registration
-        // Role can only be changed by admin users through admin routes
         const role = 'employee';
 
-        // Check duplicate
         const existing = await User.findOne({ email });
         if (existing) {
             return res.status(409).json({
@@ -66,7 +59,6 @@ export const register = async (req, res, next) => {
             });
         }
 
-        // Auto-assign the department's manager to new employees
         let managerId = null;
         if (role === 'employee' && department) {
             const deptManager = await User.findOne({ role: 'manager', department, isActive: true });
@@ -86,7 +78,6 @@ export const register = async (req, res, next) => {
     }
 };
 
-// ─────── POST /api/auth/login ───────
 export const login = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -99,7 +90,6 @@ export const login = async (req, res, next) => {
 
         const { email, password } = req.body;
 
-        // Find user with password field included
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
             return res.status(401).json({
@@ -135,7 +125,6 @@ export const login = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/auth/me ───────
 export const getMe = async (req, res) => {
     res.json({
         success: true,
@@ -143,9 +132,8 @@ export const getMe = async (req, res) => {
     });
 };
 
-// ─────── POST /api/auth/refresh ───────
 export const refreshToken = async (req, res) => {
-    // req.user is already verified by auth middleware
+
     const token = signToken(req.user);
     setCookieToken(res, token);
 
@@ -155,7 +143,6 @@ export const refreshToken = async (req, res) => {
     });
 };
 
-// ─────── POST /api/auth/logout ───────
 export const logoutUser = async (_req, res) => {
     res.cookie('timely_token', '', {
         httpOnly: true,

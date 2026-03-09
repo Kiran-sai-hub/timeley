@@ -4,7 +4,6 @@ import LeaveRequest from '../models/LeaveRequest.js';
 import User from '../models/User.js';
 import { countDays } from '../utils/hoursCalc.js';
 
-// ───── Validation rules ─────
 export const submitValidation = [
     body('startDate').notEmpty().withMessage('Start date is required'),
     body('endDate').notEmpty().withMessage('End date is required'),
@@ -19,7 +18,6 @@ export const reviewValidation = [
     body('reviewNote').optional().trim(),
 ];
 
-// ─────── POST /api/leave-requests ───────
 export const submitLeave = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -41,15 +39,13 @@ export const submitLeave = async (req, res, next) => {
             });
         }
 
-        // Calculate days needed
         const daysNeeded = countDays(start, end);
 
-        // Check leave balance before creating request
         const balanceKey = {
             'Annual Leave': 'annualLeave',
             'Sick Leave': 'sickLeave',
             'Casual Leave': 'casualLeave',
-            Holiday: null, // Holidays don't require balance
+            Holiday: null,
         }[leaveType];
 
         if (balanceKey) {
@@ -57,7 +53,6 @@ export const submitLeave = async (req, res, next) => {
             if (user) {
                 const availableBalance = user.leaveBalance[balanceKey] || 0;
 
-                // Check pending leaves that would use this balance
                 const pendingLeaves = await LeaveRequest.find({
                     userId: req.user._id,
                     leaveType,
@@ -97,12 +92,10 @@ export const submitLeave = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/leave-requests ───────
 export const getMyLeaves = async (req, res, next) => {
     try {
         const filter = { userId: req.user._id };
 
-        // Optional status filter
         if (req.query.status && ['pending', 'approved', 'rejected'].includes(req.query.status)) {
             filter.status = req.query.status;
         }
@@ -114,7 +107,6 @@ export const getMyLeaves = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/leave-requests/month ───────
 export const getLeavesForMonth = async (req, res, next) => {
     try {
         const { year, month } = req.query;
@@ -137,14 +129,13 @@ export const getLeavesForMonth = async (req, res, next) => {
             status: { $ne: 'rejected' },
         }).sort({ startDate: 1 });
 
-        // Build a date → status map (same logic as frontend getLeaveDatesForMonth)
         const dateMap = {};
         for (const leave of leaves) {
             const s = new Date(leave.startDate);
             const e = new Date(leave.endDate);
             for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
                 const key = new Date(d).toDateString();
-                // approved overrides pending
+
                 if (!dateMap[key] || leave.status === 'approved') {
                     dateMap[key] = leave.status;
                 }
@@ -157,7 +148,6 @@ export const getLeavesForMonth = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/leave-requests/:id ───────
 export const getLeaveById = async (req, res, next) => {
     try {
         const leave = await LeaveRequest.findOne({
@@ -178,7 +168,6 @@ export const getLeaveById = async (req, res, next) => {
     }
 };
 
-// ─────── PATCH /api/leave-requests/:id/review  (Manager only) ───────
 export const reviewLeave = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -213,8 +202,6 @@ export const reviewLeave = async (req, res, next) => {
             });
         }
 
-        // Authorization: Managers can only review leaves from their department
-        // Admins can review any leave
         const requestingUser = await User.findById(req.user._id).session(session);
         const leaveUser = await User.findById(leave.userId).session(session);
 
@@ -245,13 +232,12 @@ export const reviewLeave = async (req, res, next) => {
         leave.reviewedBy = req.user._id;
         if (reviewNote) leave.reviewNote = reviewNote;
 
-        // If approved, deduct leave balance atomically
         if (status === 'approved') {
             const balanceKey = {
                 'Annual Leave': 'annualLeave',
                 'Sick Leave': 'sickLeave',
                 'Casual Leave': 'casualLeave',
-                Holiday: null, // Holidays don't deduct balance
+                Holiday: null,
             }[leave.leaveType];
 
             if (balanceKey && leaveUser.leaveBalance[balanceKey] != null) {
@@ -274,7 +260,6 @@ export const reviewLeave = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/leave-requests/team  (Manager / Admin) ───────
 export const getTeamLeaves = async (req, res, next) => {
     try {
         const { role, department, _id: currentUserId } = req.user;
@@ -282,10 +267,8 @@ export const getTeamLeaves = async (req, res, next) => {
         let teamMembers;
 
         if (role === 'admin') {
-            // Admin sees ALL users (except themselves)
             teamMembers = await User.find({ _id: { $ne: currentUserId } }).select('_id name email department role');
         } else {
-            // Manager sees employees in their department (excluding themselves)
             teamMembers = await User.find({
                 department,
                 _id: { $ne: currentUserId },

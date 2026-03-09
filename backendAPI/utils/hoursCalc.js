@@ -1,17 +1,10 @@
 import TimeEntry from '../models/TimeEntry.js';
 
-// ──────────────────────────────────────────────
-//  Helper: is a given date a weekend?
-// ──────────────────────────────────────────────
 export const isWeekend = (date) => {
     const day = date.getDay();
     return day === 0 || day === 6;
 };
 
-// ──────────────────────────────────────────────
-//  DST-safe day counting between two dates (inclusive)
-//  Uses noon to avoid DST boundary issues
-// ──────────────────────────────────────────────
 export const countDays = (startDate, endDate) => {
     let count = 0;
     const d = new Date(startDate);
@@ -25,7 +18,6 @@ export const countDays = (startDate, endDate) => {
     return Math.max(1, count);
 };
 
-// Count days in a date range that fall within a specific month (inclusive)
 export const countDaysInMonth = (startDate, endDate, year, month) => {
     const monthStart = new Date(year, month, 1, 12, 0, 0, 0);
     const monthEnd = new Date(year, month + 1, 0, 12, 0, 0, 0);
@@ -37,9 +29,6 @@ export const countDaysInMonth = (startDate, endDate, year, month) => {
     return countDays(effectiveStart, effectiveEnd);
 };
 
-// ──────────────────────────────────────────────
-//  Get all time entries for a user in a date range
-// ──────────────────────────────────────────────
 export const getEntriesInRange = async (userId, startDate, endDate) => {
     return TimeEntry.find({
         userId,
@@ -47,10 +36,6 @@ export const getEntriesInRange = async (userId, startDate, endDate) => {
     }).sort({ timestamp: 1 });
 };
 
-// ──────────────────────────────────────────────
-//  Calculate total worked hours for a single day
-//  Pairs consecutive IN → OUT, sums durations
-// ──────────────────────────────────────────────
 export const calculateDailyHours = (dayEntries) => {
     const sorted = [...dayEntries].sort((a, b) => a.timestamp - b.timestamp);
     let total = 0;
@@ -68,9 +53,6 @@ export const calculateDailyHours = (dayEntries) => {
     return total;
 };
 
-// ──────────────────────────────────────────────
-//  Get entries grouped by date string key
-// ──────────────────────────────────────────────
 export const groupEntriesByDate = (entries) => {
     const map = new Map();
     for (const entry of entries) {
@@ -81,9 +63,6 @@ export const groupEntriesByDate = (entries) => {
     return map;
 };
 
-// ──────────────────────────────────────────────
-//  Determine day status: working / partial / absent / weekend
-// ──────────────────────────────────────────────
 export const getWorkDayStatus = (date, dayEntries) => {
     if (isWeekend(date)) return 'weekend';
     if (!dayEntries || dayEntries.length === 0) return 'absent';
@@ -98,18 +77,11 @@ export const getWorkDayStatus = (date, dayEntries) => {
     return 'partial';
 };
 
-// ──────────────────────────────────────────────
-//  Check if a shift is incomplete (odd entries or missing OUT)
-// ──────────────────────────────────────────────
 export const hasIncompleteShift = (dayEntries) => {
     if (!dayEntries || dayEntries.length === 0) return false;
     return dayEntries.length % 2 !== 0 || !dayEntries.some((e) => e.action === 'OUT');
 };
 
-// ──────────────────────────────────────────────
-//  Calculate aggregated hours for a date range
-//  Returns { regularHours, overtimeHours, totalHours }
-// ──────────────────────────────────────────────
 export const REGULAR_HOURS_PER_DAY = 8;
 
 export const calculateAggregatedHours = (entries, startDate, endDate) => {
@@ -136,9 +108,6 @@ export const calculateAggregatedHours = (entries, startDate, endDate) => {
     };
 };
 
-// ──────────────────────────────────────────────
-//  Get working days array for a month (mirrors frontend getWorkingDaysInMonth)
-// ──────────────────────────────────────────────
 export const getWorkingDaysInMonth = (entries, year, month) => {
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0);
@@ -165,9 +134,6 @@ export const getWorkingDaysInMonth = (entries, year, month) => {
     return workingDays;
 };
 
-// ──────────────────────────────────────────────
-//  Weekly stats (mirrors frontend getWeeklyStats)
-// ──────────────────────────────────────────────
 export const getWeeklyStats = (entries, weekStartDate) => {
     const grouped = groupEntriesByDate(entries);
     let totalDaysWorked = 0;
@@ -200,9 +166,6 @@ export const getWeeklyStats = (entries, weekStartDate) => {
     return { totalDaysWorked, totalHours, incompleteDays, expectedWorkingDays };
 };
 
-// ──────────────────────────────────────────────
-//  Calculate leave hours by type (approved only)
-// ──────────────────────────────────────────────
 export const calculateLeaveHours = (leaves) => {
     const result = {
         'Annual Leave': 0,
@@ -221,23 +184,18 @@ export const calculateLeaveHours = (leaves) => {
     return result;
 };
 
-// ──────────────────────────────────────────────
-//  Full hours breakdown for a pay period (month)
-// ──────────────────────────────────────────────
 export const getHoursBreakdown = (entries, leaves, year, month) => {
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0);
 
     const { regularHours, overtimeHours, totalHours } = calculateAggregatedHours(entries, monthStart, monthEnd);
 
-    // Filter leaves that overlap with this month (not just those starting in it)
     const monthLeaves = leaves.filter((l) => {
         const start = new Date(l.startDate);
         const end = new Date(l.endDate);
         return start <= monthEnd && end >= monthStart;
     });
 
-    // Calculate leave hours only for days within this month
     const leaveHours = {
         'Annual Leave': 0,
         'Sick Leave': 0,
@@ -259,9 +217,6 @@ export const getHoursBreakdown = (entries, leaves, year, month) => {
     };
 };
 
-// ──────────────────────────────────────────────
-//  Format hours nicely (e.g. "8h 30m")
-// ──────────────────────────────────────────────
 export const formatHours = (hours) => {
     const whole = Math.floor(hours);
     const minutes = Math.round((hours - whole) * 60);

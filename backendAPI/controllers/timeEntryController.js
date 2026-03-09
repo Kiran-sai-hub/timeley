@@ -11,12 +11,10 @@ import {
     getHoursBreakdown,
 } from '../utils/hoursCalc.js';
 
-// ───── Validation rules ─────
 export const punchValidation = [
     body('action').isIn(['IN', 'OUT']).withMessage('Action must be IN or OUT'),
 ];
 
-// ─────── POST /api/time-entries  (Punch IN / OUT) ───────
 export const createEntry = async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -35,7 +33,6 @@ export const createEntry = async (req, res, next) => {
         const { action } = req.body;
         const userId = req.user._id;
 
-        // ── Punch validation: check current day status ──
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date();
@@ -69,7 +66,7 @@ export const createEntry = async (req, res, next) => {
         const entry = await TimeEntry.create([{
             userId,
             action,
-            timestamp: new Date(), // server-generated timestamp
+            timestamp: new Date(),
         }], { session });
 
         await session.commitTransaction();
@@ -83,13 +80,11 @@ export const createEntry = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/time-entries ───────
 export const getEntries = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const filter = { userId };
 
-        // Optional date-range filters
         if (req.query.date) {
             const d = new Date(req.query.date);
             const start = new Date(d); start.setHours(0, 0, 0, 0);
@@ -113,7 +108,6 @@ export const getEntries = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/time-entries/daily-summary ───────
 export const getDailySummary = async (req, res, next) => {
     try {
         const dateStr = req.query.date;
@@ -144,7 +138,6 @@ export const getDailySummary = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/time-entries/monthly ───────
 export const getMonthlyHours = async (req, res, next) => {
     try {
         const { year, month } = req.query;
@@ -172,7 +165,6 @@ export const getMonthlyHours = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/time-entries/yearly ───────
 export const getYearlyHours = async (req, res, next) => {
     try {
         const { year } = req.query;
@@ -199,7 +191,6 @@ export const getYearlyHours = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/time-entries/weekly-stats ───────
 export const getWeeklyStatsHandler = async (req, res, next) => {
     try {
         const weekStartStr = req.query.weekStart;
@@ -228,7 +219,6 @@ export const getWeeklyStatsHandler = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/time-entries/working-days ───────
 export const getWorkingDaysHandler = async (req, res, next) => {
     try {
         const { year, month } = req.query;
@@ -253,7 +243,6 @@ export const getWorkingDaysHandler = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/time-entries/hours-breakdown ───────
 export const getHoursBreakdownHandler = async (req, res, next) => {
     try {
         const { year, month } = req.query;
@@ -284,7 +273,6 @@ export const getHoursBreakdownHandler = async (req, res, next) => {
     }
 };
 
-// ─────── GET /api/time-entries/overtime ───────
 export const getOvertimeHandler = async (req, res, next) => {
     try {
         const userId = req.user._id;

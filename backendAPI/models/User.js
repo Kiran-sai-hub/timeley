@@ -3,18 +3,46 @@ import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
     {
-        name: { type: String, required: true, trim: true },
-        email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-        password: { type: String, required: true, select: false }, // hidden by default
-        role: { type: String, enum: ['employee', 'manager', 'admin'], default: 'employee' },
-        department: { type: String, default: '' },
-        managerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+        name: { 
+            type: String, 
+            required: true, 
+            trim: true 
+        },
+        email: { 
+            type: String, 
+            required: true, 
+            unique: true, 
+            lowercase: true, 
+            trim: true 
+        },
+        password: { 
+            type: String, 
+            required: true, 
+            select: false 
+        },
+        role: 
+        { type: String, 
+            enum: ['employee', 'manager', 'admin'], 
+            default: 'employee' 
+        },
+        department: { 
+            type: String, 
+            default: '' 
+        },
+        managerId: { 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'User', 
+            default: null 
+        },
         leaveBalance: {
             annualLeave: { type: Number, default: 18 },
             sickLeave: { type: Number, default: 12 },
             casualLeave: { type: Number, default: 6 },
         },
-        isActive: { type: Boolean, default: true },
+        isActive: { 
+            type: Boolean, 
+            default: true 
+        },
     },
     { timestamps: true }
 );

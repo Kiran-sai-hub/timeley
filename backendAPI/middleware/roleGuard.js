@@ -1,8 +1,3 @@
-/**
- * Role-based access control middleware.
- * Usage: roleGuard('manager')  or  roleGuard('manager', 'admin')
- * Must be used AFTER the auth middleware so that req.user exists.
- */
 const roleGuard = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {
