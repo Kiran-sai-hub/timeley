@@ -1,6 +1,10 @@
-# Timely - Time Tracking & Leave Management
+# Timeley - Time Tracking & Leave Management
 
-Timely is a modern, full-stack application designed to streamline employee time tracking and leave management. It features a robust backend for secure data handling and a sleek, responsive frontend for an intuitive user experience.
+Timeley is a modern, full-stack application designed to streamline employee time tracking and leave management. It features a robust backend for secure data handling and a sleek, responsive frontend for an intuitive user experience.
+
+## Interesting Fact
+
+A version of the very same app here maybe one or two changes is being used actively by 30+ employees in production of a Small agency for thier time & leave tracking.
 
 ## Features
 
@@ -91,7 +95,7 @@ Follow these instructions to get the project up and running on your local machin
 ## Project Structure
 
 ```
-timely/
+Timeley/
 ├── backendAPI/           # Node.js/Express Backend
 │   ├── config/           # DB configuration
 │   ├── controllers/      # Request handlers
